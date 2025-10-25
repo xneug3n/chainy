@@ -1,0 +1,125 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Flutter generated files
+.flutter-plugins
+.flutter-plugins-dependencies
+devtools_options.yaml
+
+# IDE specific
+habbitator.iml
+
+# Taskmaster files
+.taskmaster/state.json      
+.taskmaster/reports/
+.taskmaster/config.json
+
+# Cursor
+.cursor/mcp.json
+# .cursor/operational playbooks/playbooks/dynamic/
+
+# Environment variables (already covered but ensuring)
+.env
+.env.local
+.env.production
+.env.development
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Secrets and sensitive files
+lib/secrets.dart
+secrets.dart
+*.secret.dart
+
+# Build artifacts
+build/
+.dart_tool/ 
+
+# Coverage Reports
+coverage/
+*.lcov
+lcov.info
+
+# Test Results
+test-results/
+test-reports/
+
+# Platform Build Artifacts  
+android/local.properties
+ios/Pods/
+macos/Pods/
+*.iml
+
+# IDE Settings
+.vscode/settings.json
+.vscode/launch.json 
+
+# Task files
+# tasks.json
+# tasks/ 

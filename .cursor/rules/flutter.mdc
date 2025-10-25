@@ -1,0 +1,82 @@
+---
+description: Flutter and Dart development guidelines for best practices
+globs: lib/**/*.dart, test/**/*.dart
+alwaysApply: true
+---
+
+You are an expert in Flutter and Dart development.
+
+## **Purpose / Goal**
+Establish consistent Flutter and Dart development standards for performance optimization and maintainable code.
+
+## **Scope**
+- Dart language conventions and patterns
+- Flutter widget architecture and performance
+- Testing strategies
+- Code organization and structure
+
+## **Requirements / Specifications**
+
+### **Dart Language Standards**
+- **Type Safety:** Always declare explicit types for variables, function parameters, and return values
+- **Function Design:**
+  - Write functions with single responsibility (max 20 lines)
+  - Use descriptive verb-based names (isLoading, hasError, canDelete)
+  - Implement early returns to reduce nesting
+  - Use default parameter values instead of null checks
+- **Data Handling:**
+  - Prefer immutability with const constructors
+  - Encapsulate data in composite types instead of primitives
+  - Use classes with internal validation for data integrity
+
+### **Flutter Architecture**
+- **Widget Structure:**
+  - Break down large widgets into smaller, focused components
+  - Use const constructors to optimize rebuilds
+  - Avoid deep widget nesting (max 3-4 levels)
+  - Create reusable widget components
+
+### **Performance Optimization**
+- **Widget Efficiency:**
+  - Use const constructors wherever possible
+  - Implement ListView.builder for large lists
+  - Avoid unnecessary rebuilds with proper state management
+- **Memory Management:**
+  - Implement proper disposal of controllers and streams
+  - Use keepAlive for persistent state when needed
+  - Optimize image loading with cached_network_image
+
+### **Testing Standards**
+- **Unit Testing:** Follow Arrange-Act-Assert pattern with descriptive test names
+- **Widget Testing:** Use Flutter's widget testing framework for UI components
+- **Integration Testing:** Test complete user flows and API interactions
+- **Test Organization:** Use clear variable naming (inputX, mockX, actualX, expectedX)
+- **Test Coverage:** Use proper test coverage tools to ensure comprehensive testing
+- **Test Naming:** Follow proper test naming conventions for clarity and maintainability
+- **CI/CD Testing:** Implement proper CI/CD testing pipelines for automated quality assurance
+
+## **Examples / References**
+```dart
+// Good: Explicit types and const constructor
+class UserCard extends StatelessWidget {
+  const UserCard({super.key, required this.user});
+  final User user;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Text(user.name),
+    );
+  }
+}
+
+// Good: Early return pattern
+bool isValidEmail(String email) {
+  if (email.isEmpty) return false;
+  return email.contains('@');
+}
+```
+
+## **Integration / Combination with other Rules**
+- **See:** cursor_rules.mdc for general rule structure and formatting
+- Combine with project-specific architecture rules for complete coverage

@@ -1,0 +1,85 @@
+1) Zielgruppe & Nutzungskontext
+Primäre Zielgruppe (MVP):
+Selbstoptimierer & Berufstätige (Professionals), die 3–8 Routinen täglich pflegen wollen (Fitness, Wasser, Fokuszeiten, Lesen) und Zuverlässigkeit/Tempo bevorzugen.
+Einsteiger werden durch simple Defaults abgeholt (Beispielgewohnheiten, geführtes Onboarding).
+Top-Use-Cases:
+Persönliche Routinen (Sport, Wasser, Schlaf, Lesen, Meditation).
+Leichte Arbeitsgewohnheiten (Deep-Work-Blöcke, Code-Reviews, Daily-Standup-Vorbereitung).
+Teams/soziale Features nicht im MVP (später Challenges/Sharing).
+Plattformen zum Start:
+Mobile zuerst: iOS & Android (Flutter).
+Web (PWA) später sobald Sync & Accounts stabil sind.
+2) Funktionsumfang & Priorisierung (MVP)
+Habiterstellung (Pflichtfelder):
+Name, Icon/Emoji, Farbe, Zieltyp (binär/quantitativ), Recurrence.
+Optional: Notiz. (Pflicht nur, wenn später für Statistiken nötig – im MVP optional lassen.)
+Recurrence-Modelle (MVP):
+Täglich (1×/Tag, binär oder quantitativ).
+Mehrfach/Tag (z. B. „Wasser 8×/Tag“ – integer Sollwert).
+Wöchentlich an ausgewählten Tagen (BYDAY: MO–SO).
+Benutzerdefiniert: Intervall (INTERVAL=2 o. ä.), BYDAY/COUNT/UNTIL in vereinfachter RFC5545-Anmutung (intern strukturiert speichern, UI simpel halten).
+Zieleinheit:
+Binär (erledigt/nicht).
+Quantitativ (Ganzzahl, optional Einheit-Label, z. B. „Gläser“, „Minuten“).
+Home-Screen Interaktion:
+Ein-Tap „Erledigt“ für binäre Habits.
+Quick-Stepper (±) für quantitative Habits.
+Swipe: rechts = erledigt/inkrement; links = Rückgängig/Notiz.
+Default-Sicht: Heute; Wochenansicht per Toggle.
+Streaks & Status:
+Tagesabschluss um lokale 00:00 (siehe Zeitzonenregeln).
+Verpasst: wenn Tagesziel bis 00:00 lokal nicht erfüllt.
+Streak-Freeze/Joker: optional 1×/Monat (MVP-einfach: manuell einlösbar; verhindert Streak-Abbruch an genau 1 Tag).
+Statistiken (MVP-Minimum):
+Aktuelle Streak-Länge.
+Wochenabschlussquote (aktuelle & letzte Woche).
+Rolling 7/30 Tage Erfüllung.
+Mini-Kalender-Heatmap (MVP: kompaktes Grid; Pro-Version später detaillierter).
+Gamification (MVP):
+Badges: „7-Tage-Streak“, „30 Tage“, „100 Check-ins“, „5 Habits angelegt“, „Erste Woche 80%+“.
+Kein XP/Level im MVP.
+Haptik/Animationen: kurzes Haptic + Micro-Animation bei Erfolg.
+Benachrichtigungen/Reminders:
+Pro Habit mehrere Reminder (0–3).
+Snooze (z. B. +15 Min, +1 Std).
+Do-Not-Disturb respektieren (OS-Standard, ruhige Zeiten in App konfigurierbar).
+Suche/Filter/Sortierung:
+Filter: fällig, erledigt, Tag, Farbe.
+Sortierung (Default): Fälligkeit > Priorität > manuell.
+Onboarding:
+3-Schritte-Guide + 2–3 Beispielgewohnheiten (Wasser, Lesen, Schritte).
+Internationalisierung: Start Deutsch; Englisch in Post-MVP.
+3) UX & Informationsarchitektur
+Navigation (Tabbar):
+Home, Statistik, Erfolge, Einstellungen.
+Home-Layout:
+Karten je Habit mit: Name, Icon/Farbe, heutiges Ziel/Soll-Ist, aktueller Streak, % Woche (akt./letzte), Status „verpasst“ (falls zutreffend), Primary-Action (Tap/Stepper).
+Schnell-Add-Button (FAB).
+Detailansicht Habit:
+Historie: Mini-Heatmap + Liste.
+Ziele/Recurrence, Reminder, Bearbeiten/Löschen.
+Manuelles Nachtragen (gemäß Regeln, s. u.).
+Leere Zustände:
+Motivierende Micro-copy + „Erstes Habit anlegen“ (Template-Chips).
+Barrierefreiheit:
+Dynamic Type, sprechende Labels, hoher Kontrast, Touch-Ziele ≥44 pt.
+4) Datenmodell & Regeln
+Haupteinheiten:
+Habit: id, name, icon, color, type(binär|quant), target_value(int, nullable), unit(string nullable), priority(int), created_at, archived(bool).
+Schedule: habit_id(FK), rrule_struct(JSON: freq, interval, byday[], count, until).
+Reminder: id, habit_id(FK), time(LocalTime), days(Bitmask/BYDAY), enabled.
+Checkin: id, habit_id(FK), date(LocalDate), value(int), source(manual|reminder|quick), created_at.
+Settings: timezone, day_rollover(“00:00”), dnd_window, locale, backup_flags.
+BadgeUnlock: id, badge_code, unlocked_at.
+Zeitzone & Stichtag:
+Tageswechsel lokal 00:00.
+Reisen/Zeitzonenwechsel: Tagesgrenze folgt aktueller Gerätezeitzone. Checkins speichern als LocalDate + TZ-Info; Ableitung ins UTC für Sync.
+DST-Wechsel: Tagesgrenze bleibt 00:00 lokale Zeit (kein Rückdatieren).
+Streak-Logik:
+Binär: 1 pro Tag nötig.
+Quantitativ/Mehrfach: Streak zählt nur bei Zielerfüllung (≥ target_value).
+„Verpasst“ entsteht bei Ziel < target_value zum Tagesende.
+Joker/Freeze: markiert einen Tag als „neutral“ (Streak bleibt, Statistik zeigt gefrorenen Tag).
+Nachträgliche Checks:
+Erlaubt bis 1 Tag rückwirkend 
+Kein Nachtragen über Joker-Tag hinaus, um Missbrauch zu verhindern.

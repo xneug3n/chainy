@@ -1,0 +1,151 @@
+---
+description: Comprehensive tech stack guidelines for Flutter applications with Clean Architecture, Riverpod, and local storage
+globs: lib/**/*.dart, test/**/*.dart, pubspec.yaml
+alwaysApply: true
+---
+
+You are an expert in Flutter, Dart, Clean Architecture, Riverpod, and local storage solutions.
+
+## **Purpose / Goal**
+Establish comprehensive development standards for Flutter applications using Clean Architecture, Riverpod state management, and local storage with Hive.
+
+## **Scope**
+- Flutter/Dart development with Clean Architecture
+- Riverpod state management with code generation
+- Local storage with Hive
+- Navigation with GoRouter
+- UI components and visualization
+- Notifications and monetization
+- Code generation and testing
+
+## **Requirements / Specifications**
+
+### **Core Framework & Architecture**
+- **Framework:** Flutter (Mobile, Web & Desktop)
+- **Language:** Dart
+- **Architecture:** Clean Architecture (DDD, clear layers)
+- **Principles:** SOLID, Repository Pattern
+- **State Management:** Riverpod with code generation
+
+### **State Management with Riverpod**
+- **Code Generation:** Use `@riverpod` annotation with `riverpod_generator`
+- **Provider Types:** Prefer `AsyncNotifierProvider` and `NotifierProvider`
+- **Async Handling:** Use `AsyncValue` for loading/error states
+- **Avoid Legacy:** Avoid `StateProvider`, `StateNotifierProvider`, `ChangeNotifierProvider`
+- **Manual Updates:** Use `ref.invalidate()` for manual provider updates
+
+### **Local Storage Strategy**
+- **Primary:** Hive (`hive` + `hive_flutter`) for app data and settings
+- **File Paths:** Use `path_provider` for file system access
+- **Alternative:** Isar for relational queries/indexes (if needed)
+- **Code Generation:** Use `hive_generator` for DTOs/TypeAdapter
+
+### **UI Components & Visualization**
+- **Charts:** `fl_chart` for data visualization
+- **Calendar:** `table_calendar` for date selection
+- **Interactions:** `flutter_slidable` for swipe actions
+- **Icons:** `heroicons` for consistent iconography
+- **Typography:** `google_fonts` for custom fonts
+
+### **Notifications & Scheduling**
+- **Local Notifications:** `flutter_local_notifications` (iOS/Android/macOS/Linux)
+- **Timezone:** `timezone` for proper scheduling
+- **Web Fallback:** Browser Notification API with abstraction interface
+
+### **Monetization & Revenue**
+- **RevenueCat:** `purchases_flutter` for subscription management
+- **Integration:** Handle subscription states with Riverpod providers
+
+### **Export & Sharing Features**
+- **Sharing:** `share_plus` for system shares
+- **PDF Generation:** `pdf` for document creation
+- **Printing:** `printing` for print preview
+- **File Selection:** `file_picker` for user file selection
+
+### **Code Generation & Models**
+- **Build Runner:** `build_runner` for code generation
+- **Immutable Models:** `freezed` for domain entities
+- **JSON Serialization:** `json_serializable` (via Freezed)
+- **Hive Adapters:** `hive_generator` for local storage models
+
+### **Quality & Testing**
+- **Linting:** `flutter_lints` for code quality
+- **Mocking:** `mockito` for unit test mocks
+- **Integration:** `integration_test` (Flutter SDK)
+- **Test Structure:** Follow Arrange-Act-Assert pattern
+
+### **Project Structure Standards**
+- **Clean Architecture:** Separate data, domain, and presentation layers
+- **Feature-Based:** Organize by features, not technical layers
+- **Repository Pattern:** Abstract data access with repositories
+- **Dependency Injection:** Use Riverpod for dependency management
+
+### **Performance Optimization**
+- **Widget Efficiency:** Use `const` constructors for immutable widgets
+- **List Performance:** Implement `ListView.builder` for large datasets
+- **Memory Management:** Proper disposal of controllers and streams
+- **Image Handling:** Optimize image loading and caching
+
+### **Error Handling & Validation**
+- **Error Display:** Use `SelectableText.rich` instead of SnackBars
+- **Visual Feedback:** Red color for error states
+- **Empty States:** Handle within displaying screens
+- **Async States:** Proper `AsyncValue` handling for all async operations
+
+### **Code Quality Standards**
+- **Naming:** Use descriptive names with auxiliary verbs (isLoading, hasError)
+- **Function Design:** Single responsibility, max 20 lines
+- **Type Safety:** Explicit types for all variables and parameters
+- **Documentation:** Document complex logic and architectural decisions
+
+## **Examples / References**
+```dart
+// Good: Freezed domain entity with Hive
+@freezed
+class Task with _$Task {
+  const factory Task({
+    required String id,
+    required String title,
+    required DateTime createdAt,
+    @Default(false) bool isCompleted,
+  }) = _Task;
+}
+
+// Good: Riverpod provider with Hive storage
+@riverpod
+class TaskRepository extends _$TaskRepository {
+  @override
+  Future<List<Task>> build() async {
+    final box = await Hive.openBox<Task>('tasks');
+    return box.values.toList();
+  }
+  
+  Future<void> addTask(Task task) async {
+    final box = await Hive.openBox<Task>('tasks');
+    await box.put(task.id, task);
+    ref.invalidateSelf();
+  }
+}
+
+// Good: Const constructor widget
+class TaskCard extends StatelessWidget {
+  const TaskCard({super.key, required this.task});
+  final Task task;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        title: Text(task.title),
+        trailing: Icon(task.isCompleted ? Icons.check : Icons.circle_outlined),
+      ),
+    );
+  }
+}
+```
+
+## **Integration / Combination with other Rules**
+- **See:** flutter.mdc for general Flutter development patterns
+- **See:** dart-flutter-standards.mdc for Dart language standards
+- **See:** cursor_rules.mdc for rule structure and formatting
+- Combine with project-specific architecture rules for complete coverage
