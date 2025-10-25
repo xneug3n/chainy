@@ -1,0 +1,552 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Set up Flutter project with iOS-optimized design system",
+        "description": "Initialize the Flutter project with the required dependencies and implement the design system with the specified color palette for both light and dark mode.",
+        "details": "1. Create a new Flutter project using the latest stable version\n2. Set up project structure following clean architecture principles\n3. Implement the ChainyColors class as specified in the PRD\n4. Create theme data for both light and dark mode\n5. Implement dynamic theme switching based on system settings\n6. Set up basic navigation structure with TabBar (Home, Statistics, Achievements, Settings)\n7. Implement accessibility support including dynamic type, VoiceOver compatibility, and proper contrast ratios\n8. Create reusable UI components that follow the iOS design guidelines\n\nExample implementation for theme setup:\n```dart\nclass ChainyTheme {\n  static ThemeData lightTheme() {\n    return ThemeData(\n      brightness: Brightness.light,\n      primaryColor: ChainyColors.lightAccentBlue,\n      scaffoldBackgroundColor: ChainyColors.lightBackground,\n      cardColor: ChainyColors.lightCard,\n      textTheme: TextTheme(\n        bodyLarge: TextStyle(color: ChainyColors.lightPrimaryText),\n        bodyMedium: TextStyle(color: ChainyColors.lightSecondaryText),\n      ),\n      // Additional theme configurations\n    );\n  }\n  \n  static ThemeData darkTheme() {\n    return ThemeData(\n      brightness: Brightness.dark,\n      primaryColor: ChainyColors.darkAccentBlue,\n      scaffoldBackgroundColor: ChainyColors.darkBackground,\n      cardColor: ChainyColors.darkCard,\n      textTheme: TextTheme(\n        bodyLarge: TextStyle(color: ChainyColors.darkPrimaryText),\n        bodyMedium: TextStyle(color: ChainyColors.darkSecondaryText),\n      ),\n      // Additional theme configurations\n    );\n  }\n}\n```",
+        "testStrategy": "1. Verify that the app correctly applies light and dark themes based on system settings\n2. Test dynamic type support by changing system font size settings\n3. Validate color contrast ratios using accessibility tools\n4. Test VoiceOver compatibility for all UI components\n5. Verify that the app respects 'Reduce Motion' settings\n6. Ensure all touch targets meet the minimum 44pt requirement\n7. Test theme consistency across all screens and components",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Flutter project and implement clean architecture structure",
+            "description": "Initialize a new Flutter project with the latest stable version and set up the project structure following clean architecture principles.",
+            "dependencies": [],
+            "details": "1. Use Flutter CLI to create a new project: 'flutter create --org com.chainy chainy_app'\n2. Set up project folders following clean architecture:\n   - /lib/core (shared utilities, constants)\n   - /lib/data (repositories, data sources)\n   - /lib/domain (entities, use cases)\n   - /lib/presentation (UI components, screens)\n3. Configure iOS-specific settings in Info.plist and project files\n4. Set up dependency injection using get_it or provider package\n5. Create base abstract classes for repositories and services",
+            "status": "pending",
+            "testStrategy": "1. Verify project structure follows clean architecture principles\n2. Test dependency injection setup\n3. Ensure iOS configuration is properly set up\n4. Validate that the project builds and runs on iOS simulator"
+          },
+          {
+            "id": 2,
+            "title": "Implement ChainyColors class and theme system",
+            "description": "Create the ChainyColors class with the specified color palette and implement theme data for both light and dark mode with dynamic switching.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Create a ChainyColors class with static color constants for both light and dark mode:\n   - Primary colors (accent blue, background, card)\n   - Text colors (primary, secondary)\n   - Status colors (success, warning, error)\n2. Implement ChainyTheme class with lightTheme() and darkTheme() methods\n3. Set up ThemeProvider using Provider package for dynamic theme switching\n4. Implement system theme detection and automatic switching\n5. Create extension methods for context to easily access theme colors\n6. Ensure all colors meet iOS accessibility contrast guidelines",
+            "status": "pending",
+            "testStrategy": "1. Unit tests for ChainyColors class\n2. Widget tests for theme switching functionality\n3. Test theme adaptation to system settings changes\n4. Verify color contrast ratios using accessibility tools\n5. Test appearance on different iOS devices and screen sizes"
+          },
+          {
+            "id": 3,
+            "title": "Create iOS-styled reusable UI components and navigation structure",
+            "description": "Develop a set of reusable UI components following iOS design guidelines and implement the basic TabBar navigation structure.",
+            "dependencies": [
+              2
+            ],
+            "details": "1. Create base UI components adhering to iOS design guidelines:\n   - ChainyButton (primary, secondary variants)\n   - ChainyCard with proper shadows and corner radius\n   - ChainyTextField with iOS-style input appearance\n   - ChainySwitch matching iOS toggle style\n2. Implement TabBar navigation with 4 tabs (Home, Statistics, Achievements, Settings)\n3. Create screen scaffolds for each main section\n4. Add iOS-specific navigation gestures and transitions\n5. Implement VoiceOver compatibility for all components\n6. Support dynamic type for text scaling\n7. Add haptic feedback for interactions",
+            "status": "pending",
+            "testStrategy": "1. Widget tests for each UI component\n2. Integration tests for TabBar navigation\n3. Test VoiceOver compatibility with iOS accessibility tools\n4. Verify dynamic type support by changing system font size settings\n5. Test navigation gestures and transitions\n6. Validate that components follow iOS design guidelines"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement Habit data model and storage",
+        "description": "Create the data model for habits with all required fields and implement local storage functionality.",
+        "details": "1. Define the Habit data model with the following fields:\n   - id (UUID)\n   - name (String)\n   - icon/emoji (String)\n   - color (Color)\n   - goalType (enum: binary/quantitative)\n   - targetValue (int, for quantitative goals)\n   - unit (String, optional for quantitative goals)\n   - recurrenceType (enum: daily, multiple per day, weekly, custom)\n   - recurrenceConfig (JSON object for storing RFC5545-like recurrence rules)\n   - note (String, optional)\n   - createdAt (DateTime)\n   - updatedAt (DateTime)\n\n2. Implement a RecurrenceConfig class to handle different recurrence patterns:\n   - Daily: simple daily recurrence\n   - Multiple per day: integer target value\n   - Weekly: selected days (BYDAY: MO-SU)\n   - Custom: interval, BYDAY, COUNT, UNTIL in simplified RFC5545 format\n\n3. Set up local storage using either Hive, SQLite, or shared_preferences based on complexity needs\n\n4. Implement CRUD operations for habits\n\n5. Create a HabitRepository class to handle data operations\n\nExample implementation:\n```dart\nclass Habit {\n  final String id;\n  final String name;\n  final String icon;\n  final Color color;\n  final GoalType goalType;\n  final int targetValue;\n  final String? unit;\n  final RecurrenceType recurrenceType;\n  final RecurrenceConfig recurrenceConfig;\n  final String? note;\n  final DateTime createdAt;\n  final DateTime updatedAt;\n  \n  Habit({\n    required this.id,\n    required this.name,\n    required this.icon,\n    required this.color,\n    required this.goalType,\n    this.targetValue = 1,\n    this.unit,\n    required this.recurrenceType,\n    required this.recurrenceConfig,\n    this.note,\n    required this.createdAt,\n    required this.updatedAt,\n  });\n  \n  // JSON serialization methods\n  Map<String, dynamic> toJson() { /* ... */ }\n  factory Habit.fromJson(Map<String, dynamic> json) { /* ... */ }\n}\n\nenum GoalType { binary, quantitative }\n\nenum RecurrenceType { daily, multiplePerDay, weekly, custom }\n\nclass RecurrenceConfig {\n  // Implementation for different recurrence patterns\n}\n\nclass HabitRepository {\n  Future<List<Habit>> getAllHabits() async { /* ... */ }\n  Future<Habit?> getHabitById(String id) async { /* ... */ }\n  Future<void> saveHabit(Habit habit) async { /* ... */ }\n  Future<void> deleteHabit(String id) async { /* ... */ }\n}\n```",
+        "testStrategy": "1. Unit tests for Habit model serialization/deserialization\n2. Unit tests for RecurrenceConfig logic with various recurrence patterns\n3. Unit tests for HabitRepository CRUD operations\n4. Integration tests for database operations\n5. Test edge cases like:\n   - Habits with very long names\n   - Different recurrence patterns\n   - Various goal types and target values\n6. Test data migration scenarios\n7. Test data persistence across app restarts",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Habit and RecurrenceConfig data models",
+            "description": "Create the Habit class with all required fields and implement the RecurrenceConfig class to handle different recurrence patterns.",
+            "dependencies": [],
+            "details": "Implement the Habit class with all required fields including id, name, icon, color, goalType, targetValue, unit, recurrenceType, recurrenceConfig, note, createdAt, and updatedAt. Create the RecurrenceConfig class to handle different recurrence patterns (daily, multiple per day, weekly, custom) with appropriate properties and methods. Implement JSON serialization and deserialization methods for both classes to support data persistence.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for Habit and RecurrenceConfig classes, including serialization/deserialization tests, validation tests for different field combinations, and tests for various recurrence pattern configurations."
+          },
+          {
+            "id": 2,
+            "title": "Set up local storage infrastructure",
+            "description": "Evaluate and implement the appropriate local storage solution (Hive, SQLite, or shared_preferences) based on the application's complexity needs.",
+            "dependencies": [
+              1
+            ],
+            "details": "Research and compare Hive, SQLite, and shared_preferences to determine the most suitable storage solution for the habit tracking app. Set up the selected database infrastructure, including necessary dependencies, initialization code, and database schema. Create database adapters or helpers to facilitate data operations. Implement data migration strategies for future updates.",
+            "status": "pending",
+            "testStrategy": "Create unit tests for database initialization and configuration. Write integration tests to verify database connection and basic operations. Test database performance with large datasets and test data migration scenarios."
+          },
+          {
+            "id": 3,
+            "title": "Implement HabitRepository for CRUD operations",
+            "description": "Create a HabitRepository class that handles all data operations for habits, including create, read, update, and delete functionality.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Develop the HabitRepository class with methods for getAllHabits(), getHabitById(), saveHabit(), and deleteHabit(). Implement proper error handling and logging for database operations. Ensure thread safety for concurrent operations. Add methods for querying habits based on specific criteria (e.g., by recurrence type, by creation date). Implement caching strategies if appropriate to improve performance.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for each CRUD operation in the HabitRepository. Create integration tests that verify the repository correctly interacts with the database. Test edge cases such as concurrent operations, invalid inputs, and database errors. Verify that queries return the expected results for different filtering criteria."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Implement Check-in data model and streak logic",
+        "description": "Create the data model for habit check-ins and implement the streak calculation logic according to the specified rules.",
+        "details": "1. Define the CheckIn data model with the following fields:\n   - id (UUID)\n   - habitId (UUID, foreign key to Habit)\n   - date (DateTime)\n   - value (int, represents completion count)\n   - note (String, optional)\n   - createdAt (DateTime)\n   - updatedAt (DateTime)\n   - isBackfilled (bool, for retroactive check-ins)\n\n2. Implement streak calculation logic:\n   - For binary habits: 1 check-in per day required\n   - For quantitative habits: value must be >= target_value\n   - Streak breaks if goal not met by local midnight (00:00)\n   - Allow retroactive check-ins up to 1 day back\n   - Implement streak freeze/joker feature (1x/month)\n\n3. Create a CheckInRepository class to handle data operations\n\n4. Implement streak calculation service\n\nExample implementation:\n```dart\nclass CheckIn {\n  final String id;\n  final String habitId;\n  final DateTime date;\n  final int value;\n  final String? note;\n  final DateTime createdAt;\n  final DateTime updatedAt;\n  final bool isBackfilled;\n  \n  CheckIn({\n    required this.id,\n    required this.habitId,\n    required this.date,\n    required this.value,\n    this.note,\n    required this.createdAt,\n    required this.updatedAt,\n    this.isBackfilled = false,\n  });\n  \n  // JSON serialization methods\n  Map<String, dynamic> toJson() { /* ... */ }\n  factory CheckIn.fromJson(Map<String, dynamic> json) { /* ... */ }\n}\n\nclass StreakService {\n  final CheckInRepository checkInRepository;\n  final HabitRepository habitRepository;\n  \n  StreakService(this.checkInRepository, this.habitRepository);\n  \n  Future<int> getCurrentStreak(String habitId) async {\n    final habit = await habitRepository.getHabitById(habitId);\n    if (habit == null) return 0;\n    \n    final checkIns = await checkInRepository.getCheckInsForHabit(habitId);\n    // Sort check-ins by date\n    checkIns.sort((a, b) => b.date.compareTo(a.date));\n    \n    // Calculate streak based on habit type and target value\n    int streak = 0;\n    DateTime? lastDate;\n    \n    for (var checkIn in checkIns) {\n      final date = DateTime(checkIn.date.year, checkIn.date.month, checkIn.date.day);\n      \n      // Check if goal was met\n      bool goalMet = habit.goalType == GoalType.binary ? \n          checkIn.value >= 1 : \n          checkIn.value >= habit.targetValue;\n      \n      if (!goalMet) break;\n      \n      // Check for streak continuity\n      if (lastDate == null) {\n        streak = 1;\n        lastDate = date;\n        continue;\n      }\n      \n      // Calculate days difference\n      final difference = lastDate.difference(date).inDays;\n      \n      // Check if streak is continuous\n      if (difference == 1) {\n        streak++;\n        lastDate = date;\n      } else {\n        break;\n      }\n    }\n    \n    return streak;\n  }\n}\n```",
+        "testStrategy": "1. Unit tests for CheckIn model serialization/deserialization\n2. Unit tests for streak calculation with various scenarios:\n   - Binary habits with daily check-ins\n   - Quantitative habits with different target values\n   - Broken streaks due to missed days\n   - Retroactive check-ins within allowed timeframe\n   - Streak freeze/joker usage\n3. Integration tests for database operations\n4. Test edge cases:\n   - Check-ins at exactly midnight\n   - Timezone changes\n   - Multiple check-ins on the same day\n   - Very long streaks\n5. Test streak calculation performance with large datasets",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement CheckIn data model and serialization",
+            "description": "Create the CheckIn class with all required fields and implement JSON serialization/deserialization methods.",
+            "dependencies": [],
+            "details": "Define the CheckIn class with the following fields: id (UUID), habitId (UUID), date (DateTime), value (int), note (String, optional), createdAt (DateTime), updatedAt (DateTime), and isBackfilled (bool). Implement toJson() and fromJson() methods for serialization. Create unit tests to verify proper serialization and deserialization of the model. Ensure proper type validation and error handling for all fields.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for CheckIn model creation with various parameters. Test serialization/deserialization with valid and invalid JSON data. Verify field constraints and default values are properly applied."
+          },
+          {
+            "id": 2,
+            "title": "Create CheckInRepository for data operations",
+            "description": "Implement a repository class to handle all database operations related to check-ins including CRUD operations.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a CheckInRepository class that handles creating, reading, updating, and deleting check-in records. Implement methods for getCheckInsForHabit(habitId), addCheckIn(checkIn), updateCheckIn(checkIn), deleteCheckIn(id), and getCheckInsByDateRange(habitId, startDate, endDate). Ensure proper error handling and transaction management. The repository should use the appropriate storage mechanism (SQLite, Hive, or other local database) consistent with the rest of the application.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for each repository method using mock database connections. Test edge cases like empty results, database errors, and concurrent operations. Verify proper error propagation and transaction handling."
+          },
+          {
+            "id": 3,
+            "title": "Implement streak calculation service",
+            "description": "Create a service to calculate and manage streak data based on check-in history and habit requirements.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement a StreakService class that calculates current streak length based on check-in history. Handle different habit types (binary vs. quantitative) with appropriate goal completion logic. Implement streak calculation considering midnight cutoffs, retroactive check-ins (up to 1 day back), and streak freeze/joker feature (once per month). Create methods for getCurrentStreak(habitId), getLongestStreak(habitId), and applyStreakFreeze(habitId, date). Ensure calculations are timezone-aware and handle edge cases like daylight saving time changes.",
+            "status": "pending",
+            "testStrategy": "Create comprehensive unit tests for streak calculations with various scenarios: continuous streaks, broken streaks, retroactive check-ins, streak freezes. Test edge cases like timezone changes, month boundaries, and leap years. Verify correct behavior for both binary and quantitative habits with different target values."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Home screen with habit list and segmented timeline",
+        "description": "Create the main Home screen with a vertical list of habits, each with a segmented timeline for tracking progress and interactive elements for check-ins.",
+        "details": "1. Create a HomeScreen widget with a TabBar navigation\n2. Implement a vertical ListView for displaying habits\n3. Create a HabitRow widget with the following components:\n   - Left: Icon/emoji and habit name\n   - Middle: Segmented timeline (segments based on target value)\n   - Right: Streak indicator\n   - Bottom: Compact week strip (Mo-Su) as mini-marks\n\n4. Implement interactive elements:\n   - Segment tap to activate/deactivate segments\n   - Swipe right for completing/incrementing\n   - Swipe left for undo/notes\n   - Haptic feedback on segment completion\n   - Animations: Pop + Glow for completion, Confetti for streak increment\n\n5. Add an \"Add New Habit\" row at the end of the list\n\n6. Implement filter and sort functionality:\n   - Filter by: due, completed, day, color\n   - Sort by: due date > priority > manual\n\nExample implementation:\n```dart\nclass HomeScreen extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      appBar: AppBar(title: Text('Chainy')),\n      body: HabitListView(),\n      floatingActionButton: FloatingActionButton(\n        onPressed: () => _showAddHabitDialog(context),\n        child: Icon(Icons.add),\n      ),\n    );\n  }\n}\n\nclass HabitListView extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return Consumer<HabitProvider>(\n      builder: (context, habitProvider, _) {\n        final habits = habitProvider.habits;\n        \n        return ListView.builder(\n          itemCount: habits.length + 1, // +1 for Add New row\n          itemBuilder: (context, index) {\n            if (index == habits.length) {\n              return AddNewHabitRow();\n            }\n            return HabitRow(habit: habits[index]);\n          },\n        );\n      },\n    );\n  }\n}\n\nclass HabitRow extends StatelessWidget {\n  final Habit habit;\n  \n  const HabitRow({required this.habit});\n  \n  @override\n  Widget build(BuildContext context) {\n    return Dismissible(\n      key: Key(habit.id),\n      background: SwipeRightBackground(),\n      secondaryBackground: SwipeLeftBackground(),\n      onDismissed: (direction) {\n        if (direction == DismissDirection.startToEnd) {\n          // Complete/increment habit\n        } else {\n          // Show notes or undo\n        }\n      },\n      child: ListTile(\n        leading: CircleAvatar(child: Text(habit.icon)),\n        title: Text(habit.name),\n        subtitle: WeekStripIndicator(habitId: habit.id),\n        trailing: StreakIndicator(streak: habit.currentStreak),\n        onTap: () => _showHabitDetails(context, habit),\n      ),\n    );\n  }\n}\n\nclass SegmentedTimeline extends StatelessWidget {\n  final Habit habit;\n  final int currentValue;\n  \n  const SegmentedTimeline({\n    required this.habit,\n    required this.currentValue,\n  });\n  \n  @override\n  Widget build(BuildContext context) {\n    return Row(\n      children: List.generate(\n        habit.targetValue,\n        (index) => GestureDetector(\n          onTap: () => _updateSegment(index),\n          child: AnimatedContainer(\n            duration: Duration(milliseconds: 200),\n            margin: EdgeInsets.symmetric(horizontal: 2),\n            width: 20,\n            height: 20,\n            decoration: BoxDecoration(\n              color: _getSegmentColor(index),\n              borderRadius: BorderRadius.circular(4),\n            ),\n          ),\n        ),\n      ),\n    );\n  }\n  \n  Color _getSegmentColor(int index) {\n    if (index < currentValue) {\n      return Theme.of(context).brightness == Brightness.light\n          ? ChainyColors.lightSuccessGreen\n          : ChainyColors.darkSuccessGreen;\n    } else {\n      return Theme.of(context).brightness == Brightness.light\n          ? ChainyColors.lightInactiveGray\n          : ChainyColors.darkInactiveGray;\n    }\n  }\n  \n  void _updateSegment(int index) {\n    // Update segment logic with haptic feedback\n    HapticFeedback.lightImpact();\n    // Animation logic\n  }\n}\n```",
+        "testStrategy": "1. Widget tests for HomeScreen layout and components\n2. Widget tests for HabitRow interactions\n3. Integration tests for swipe gestures and segment tapping\n4. Test haptic feedback and animations\n5. Test filter and sort functionality\n6. Test edge cases:\n   - Empty habit list\n   - Habits with different target values\n   - Long habit names\n   - Different device screen sizes\n7. Usability testing for interaction patterns\n8. Performance testing with large number of habits",
+        "priority": "high",
+        "dependencies": [
+          1,
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement HomeScreen widget with TabBar navigation and habit ListView",
+            "description": "Create the main HomeScreen widget with TabBar navigation and implement the vertical ListView for displaying habits.",
+            "dependencies": [],
+            "details": "1. Create a HomeScreen StatelessWidget with a Scaffold\n2. Implement TabBar navigation at the top of the screen\n3. Create a HabitListView widget that uses Consumer<HabitProvider> to access habits\n4. Implement ListView.builder with proper itemCount and itemBuilder\n5. Add the 'Add New Habit' row at the end of the list\n6. Connect the FloatingActionButton to show the add habit dialog",
+            "status": "pending",
+            "testStrategy": "1. Widget tests for HomeScreen layout and TabBar navigation\n2. Widget tests for HabitListView rendering\n3. Test empty state handling\n4. Test scrolling behavior with many habits\n5. Test that 'Add New Habit' row appears at the end of the list"
+          },
+          {
+            "id": 2,
+            "title": "Implement HabitRow widget with segmented timeline and interactive elements",
+            "description": "Create the HabitRow widget with icon/emoji, habit name, segmented timeline, streak indicator, and compact week strip.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Create a HabitRow StatelessWidget that takes a Habit object\n2. Implement the layout with leading icon/emoji, title with habit name\n3. Create the SegmentedTimeline widget with interactive segments\n4. Add the streak indicator in the trailing position\n5. Implement the compact week strip (Mo-Su) below the main row\n6. Add GestureDetector for segment tap to activate/deactivate\n7. Implement Dismissible widget for swipe gestures (right for completing, left for undo/notes)",
+            "status": "pending",
+            "testStrategy": "1. Widget tests for HabitRow layout and components\n2. Unit tests for segment color logic\n3. Integration tests for segment tap interactions\n4. Test swipe gestures and their callbacks\n5. Test rendering with different habit configurations (binary vs. quantitative)"
+          },
+          {
+            "id": 3,
+            "title": "Implement interactive feedback and filter/sort functionality",
+            "description": "Add haptic feedback, animations for habit interactions, and implement filter and sort functionality for the habit list.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "1. Implement haptic feedback on segment completion using HapticFeedback.lightImpact()\n2. Add animations: Pop + Glow for completion, Confetti for streak increment\n3. Create filter functionality with options: due, completed, day, color\n4. Implement sort functionality with priority: due date > priority > manual\n5. Add filter/sort UI controls at the top of the habit list\n6. Connect filter/sort controls to the HabitProvider\n7. Ensure animations work smoothly with filtered/sorted lists",
+            "status": "pending",
+            "testStrategy": "1. Unit tests for filter and sort logic\n2. Widget tests for filter/sort UI controls\n3. Integration tests for applying filters and sorts\n4. Test haptic feedback triggering\n5. Test animations with different device performance profiles\n6. Test edge cases like filtering an empty list"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Implement habit creation and editing functionality",
+        "description": "Create the UI and logic for adding new habits and editing existing ones, including all required fields and recurrence options.",
+        "details": "1. Create a HabitFormScreen that can be used for both creating and editing habits\n2. Implement form fields for all required habit properties:\n   - Name (text field)\n   - Icon/Emoji (selector)\n   - Color (color picker)\n   - Goal type (binary/quantitative selector)\n   - Target value and unit (for quantitative goals)\n   - Recurrence pattern selector\n   - Optional note field\n\n3. Implement recurrence pattern selection UI:\n   - Daily option\n   - Multiple per day with integer input\n   - Weekly with day selectors (Mo-Su)\n   - Custom with interval, day selection, and end conditions\n\n4. Add validation for all fields\n\n5. Connect form to HabitRepository for saving data\n\nExample implementation:\n```dart\nclass HabitFormScreen extends StatefulWidget {\n  final Habit? habit; // Null for new habit, non-null for editing\n  \n  const HabitFormScreen({this.habit});\n  \n  @override\n  _HabitFormScreenState createState() => _HabitFormScreenState();\n}\n\nclass _HabitFormScreenState extends State<HabitFormScreen> {\n  final _formKey = GlobalKey<FormState>();\n  late TextEditingController _nameController;\n  late TextEditingController _noteController;\n  String _selectedIcon = '📝';\n  Color _selectedColor = Colors.blue;\n  GoalType _goalType = GoalType.binary;\n  int _targetValue = 1;\n  String _unit = '';\n  RecurrenceType _recurrenceType = RecurrenceType.daily;\n  late RecurrenceConfig _recurrenceConfig;\n  \n  @override\n  void initState() {\n    super.initState();\n    _initializeFormValues();\n  }\n  \n  void _initializeFormValues() {\n    if (widget.habit != null) {\n      // Initialize with existing habit values\n      _nameController = TextEditingController(text: widget.habit!.name);\n      _noteController = TextEditingController(text: widget.habit!.note ?? '');\n      _selectedIcon = widget.habit!.icon;\n      _selectedColor = widget.habit!.color;\n      _goalType = widget.habit!.goalType;\n      _targetValue = widget.habit!.targetValue;\n      _unit = widget.habit!.unit ?? '';\n      _recurrenceType = widget.habit!.recurrenceType;\n      _recurrenceConfig = widget.habit!.recurrenceConfig;\n    } else {\n      // Initialize with default values\n      _nameController = TextEditingController();\n      _noteController = TextEditingController();\n      _recurrenceConfig = RecurrenceConfig.daily();\n    }\n  }\n  \n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      appBar: AppBar(\n        title: Text(widget.habit == null ? 'Create Habit' : 'Edit Habit'),\n      ),\n      body: Form(\n        key: _formKey,\n        child: ListView(\n          padding: EdgeInsets.all(16),\n          children: [\n            // Name field\n            TextFormField(\n              controller: _nameController,\n              decoration: InputDecoration(labelText: 'Habit Name'),\n              validator: (value) {\n                if (value == null || value.isEmpty) {\n                  return 'Please enter a name';\n                }\n                return null;\n              },\n            ),\n            \n            // Icon selector\n            IconSelectorWidget(\n              selectedIcon: _selectedIcon,\n              onIconSelected: (icon) => setState(() => _selectedIcon = icon),\n            ),\n            \n            // Color picker\n            ColorPickerWidget(\n              selectedColor: _selectedColor,\n              onColorSelected: (color) => setState(() => _selectedColor = color),\n            ),\n            \n            // Goal type selector\n            GoalTypeSelectorWidget(\n              goalType: _goalType,\n              onGoalTypeChanged: (type) => setState(() => _goalType = type),\n            ),\n            \n            // Target value and unit (for quantitative goals)\n            if (_goalType == GoalType.quantitative) ...[  \n              TargetValueWidget(\n                targetValue: _targetValue,\n                unit: _unit,\n                onTargetValueChanged: (value) => setState(() => _targetValue = value),\n                onUnitChanged: (value) => setState(() => _unit = value),\n              ),\n            ],\n            \n            // Recurrence selector\n            RecurrenceSelectorWidget(\n              recurrenceType: _recurrenceType,\n              recurrenceConfig: _recurrenceConfig,\n              onRecurrenceTypeChanged: (type) => setState(() => _recurrenceType = type),\n              onRecurrenceConfigChanged: (config) => setState(() => _recurrenceConfig = config),\n            ),\n            \n            // Note field\n            TextFormField(\n              controller: _noteController,\n              decoration: InputDecoration(labelText: 'Note (Optional)'),\n              maxLines: 3,\n            ),\n            \n            SizedBox(height: 20),\n            \n            // Save button\n            ElevatedButton(\n              onPressed: _saveHabit,\n              child: Text('Save Habit'),\n            ),\n          ],\n        ),\n      ),\n    );\n  }\n  \n  void _saveHabit() {\n    if (_formKey.currentState!.validate()) {\n      final habitProvider = Provider.of<HabitProvider>(context, listen: false);\n      \n      final habit = Habit(\n        id: widget.habit?.id ?? UUID.v4().toString(),\n        name: _nameController.text,\n        icon: _selectedIcon,\n        color: _selectedColor,\n        goalType: _goalType,\n        targetValue: _targetValue,\n        unit: _unit.isEmpty ? null : _unit,\n        recurrenceType: _recurrenceType,\n        recurrenceConfig: _recurrenceConfig,\n        note: _noteController.text.isEmpty ? null : _noteController.text,\n        createdAt: widget.habit?.createdAt ?? DateTime.now(),\n        updatedAt: DateTime.now(),\n      );\n      \n      habitProvider.saveHabit(habit);\n      Navigator.of(context).pop();\n    }\n  }\n}\n```",
+        "testStrategy": "1. Widget tests for HabitFormScreen layout and components\n2. Unit tests for form validation\n3. Integration tests for saving habits\n4. Test all recurrence pattern configurations\n5. Test form initialization with existing habits\n6. Test edge cases:\n   - Very long habit names\n   - High target values\n   - All possible recurrence combinations\n7. Usability testing for form flow and interaction\n8. Test form state preservation during device rotation",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement basic form fields and validation",
+            "description": "Create the HabitFormScreen with all required form fields and implement validation logic for each field.",
+            "dependencies": [],
+            "details": "1. Create the HabitFormScreen StatefulWidget with proper initialization for both new and existing habits\n2. Implement form fields for name, icon/emoji selector, color picker, and note field\n3. Add form validation for required fields\n4. Set up the form layout with proper spacing and organization\n5. Implement the form state management using a GlobalKey<FormState>",
+            "status": "pending",
+            "testStrategy": "1. Widget tests for form layout and field rendering\n2. Unit tests for form validation logic\n3. Test form initialization with both null and existing habit data\n4. Test validation error messages"
+          },
+          {
+            "id": 2,
+            "title": "Implement goal type and recurrence pattern selection",
+            "description": "Create the UI components for selecting goal types (binary/quantitative) and recurrence patterns with all required options.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Create GoalTypeSelectorWidget with binary and quantitative options\n2. Implement TargetValueWidget for quantitative goals with value input and unit selection\n3. Create RecurrenceSelectorWidget with all pattern options (daily, multiple per day, weekly, custom)\n4. Implement custom recurrence configuration with interval, day selection, and end conditions\n5. Handle state changes between different goal types and recurrence patterns",
+            "status": "pending",
+            "testStrategy": "1. Widget tests for goal type selector and recurrence pattern UI\n2. Test state transitions between different goal types\n3. Test all recurrence pattern configurations\n4. Test edge cases like high target values and complex recurrence patterns"
+          },
+          {
+            "id": 3,
+            "title": "Connect form to data layer and implement saving functionality",
+            "description": "Implement the save functionality to connect the form with the HabitRepository and handle both creation and updating of habits.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "1. Implement the _saveHabit method to collect all form data\n2. Create proper Habit object with all fields from form inputs\n3. Connect to HabitProvider/Repository for saving data\n4. Handle different scenarios for new vs. existing habits (create vs. update)\n5. Add proper navigation after successful save\n6. Implement error handling for save failures",
+            "status": "pending",
+            "testStrategy": "1. Integration tests for saving new habits\n2. Integration tests for updating existing habits\n3. Test error handling scenarios\n4. Test data persistence by retrieving saved habits"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Statistics screen with analytics dashboard",
+        "description": "Create the Statistics screen with a dashboard layout showing streak highlights, week comparisons, 30-day trends, and a mini-heatmap.",
+        "details": "1. Create a StatisticsScreen widget with a dashboard layout\n2. Implement the following components:\n   - Streak highlight section\n   - Week comparison (this week vs. last week)\n   - 30-day trend visualization\n   - Mini-heatmap for month overview\n\n3. Create data processing services to calculate statistics\n\n4. Implement responsive layout for different screen sizes\n\n5. Add empty/low-data states with encouraging messages\n\nExample implementation:\n```dart\nclass StatisticsScreen extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      appBar: AppBar(title: Text('Statistics')),\n      body: Consumer<StatisticsProvider>(\n        builder: (context, statsProvider, _) {\n          if (statsProvider.isEmpty) {\n            return EmptyStatsState();\n          }\n          \n          return ListView(\n            padding: EdgeInsets.all(16),\n            children: [\n              StreakHighlightCard(stats: statsProvider.streakStats),\n              SizedBox(height: 16),\n              WeekComparisonCard(stats: statsProvider.weekComparisonStats),\n              SizedBox(height: 16),\n              ThirtyDayTrendCard(stats: statsProvider.thirtyDayStats),\n              SizedBox(height: 16),\n              MonthHeatmapCard(stats: statsProvider.monthHeatmapStats),\n            ],\n          );\n        },\n      ),\n    );\n  }\n}\n\nclass StreakHighlightCard extends StatelessWidget {\n  final StreakStats stats;\n  \n  const StreakHighlightCard({required this.stats});\n  \n  @override\n  Widget build(BuildContext context) {\n    return Card(\n      child: Padding(\n        padding: EdgeInsets.all(16),\n        child: Column(\n          children: [\n            Text('Current Streak', style: Theme.of(context).textTheme.titleMedium),\n            SizedBox(height: 8),\n            Row(\n              mainAxisAlignment: MainAxisAlignment.center,\n              children: [\n                Icon(\n                  Icons.local_fire_department,\n                  color: Theme.of(context).brightness == Brightness.light\n                      ? ChainyColors.lightWarningOrange\n                      : ChainyColors.darkWarningOrange,\n                  size: 40,\n                ),\n                SizedBox(width: 8),\n                Text(\n                  '${stats.currentStreak}',\n                  style: Theme.of(context).textTheme.headlineLarge,\n                ),\n                SizedBox(width: 8),\n                Text('days', style: Theme.of(context).textTheme.titleMedium),\n              ],\n            ),\n            SizedBox(height: 8),\n            Text(\n              stats.encouragementMessage,\n              textAlign: TextAlign.center,\n              style: Theme.of(context).textTheme.bodyMedium,\n            ),\n          ],\n        ),\n      ),\n    );\n  }\n}\n\nclass WeekComparisonCard extends StatelessWidget {\n  final WeekComparisonStats stats;\n  \n  const WeekComparisonCard({required this.stats});\n  \n  @override\n  Widget build(BuildContext context) {\n    return Card(\n      child: Padding(\n        padding: EdgeInsets.all(16),\n        child: Column(\n          children: [\n            Text('Weekly Progress', style: Theme.of(context).textTheme.titleMedium),\n            SizedBox(height: 16),\n            Row(\n              mainAxisAlignment: MainAxisAlignment.spaceAround,\n              children: [\n                _buildWeekColumn(context, 'Last Week', stats.lastWeekCompletion),\n                _buildWeekColumn(context, 'This Week', stats.thisWeekCompletion),\n              ],\n            ),\n            SizedBox(height: 16),\n            if (stats.improvementPercentage > 0)\n              Text(\n                '${stats.improvementPercentage}% improvement! 🎉',\n                style: TextStyle(\n                  color: Theme.of(context).brightness == Brightness.light\n                      ? ChainyColors.lightSuccessGreen\n                      : ChainyColors.darkSuccessGreen,\n                  fontWeight: FontWeight.bold,\n                ),\n              ),\n          ],\n        ),\n      ),\n    );\n  }\n  \n  Widget _buildWeekColumn(BuildContext context, String label, double percentage) {\n    return Column(\n      children: [\n        Text(label, style: Theme.of(context).textTheme.bodyMedium),\n        SizedBox(height: 8),\n        CircularProgressIndicator(\n          value: percentage / 100,\n          backgroundColor: Theme.of(context).brightness == Brightness.light\n              ? ChainyColors.lightInactiveGray\n              : ChainyColors.darkInactiveGray,\n          valueColor: AlwaysStoppedAnimation<Color>(\n            Theme.of(context).brightness == Brightness.light\n                ? ChainyColors.lightAccentBlue\n                : ChainyColors.darkAccentBlue,\n          ),\n        ),\n        SizedBox(height: 8),\n        Text('${percentage.toStringAsFixed(0)}%'),\n      ],\n    );\n  }\n}\n\nclass ThirtyDayTrendCard extends StatelessWidget {\n  final ThirtyDayStats stats;\n  \n  const ThirtyDayTrendCard({required this.stats});\n  \n  @override\n  Widget build(BuildContext context) {\n    return Card(\n      child: Padding(\n        padding: EdgeInsets.all(16),\n        child: Column(\n          children: [\n            Text('30-Day Trend', style: Theme.of(context).textTheme.titleMedium),\n            SizedBox(height: 16),\n            SizedBox(\n              height: 200,\n              child: LineChart(stats.chartData),\n            ),\n          ],\n        ),\n      ),\n    );\n  }\n}\n\nclass MonthHeatmapCard extends StatelessWidget {\n  final MonthHeatmapStats stats;\n  \n  const MonthHeatmapCard({required this.stats});\n  \n  @override\n  Widget build(BuildContext context) {\n    return Card(\n      child: Padding(\n        padding: EdgeInsets.all(16),\n        child: Column(\n          children: [\n            Text('Monthly Overview', style: Theme.of(context).textTheme.titleMedium),\n            SizedBox(height: 16),\n            HeatmapCalendar(\n              datasets: stats.heatmapData,\n              colorMode: ColorMode.opacity,\n              colorsets: {\n                1: Theme.of(context).brightness == Brightness.light\n                    ? ChainyColors.lightSuccessGreen\n                    : ChainyColors.darkSuccessGreen,\n              },\n            ),\n          ],\n        ),\n      ),\n    );\n  }\n}\n\nclass EmptyStatsState extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return Center(\n      child: Column(\n        mainAxisAlignment: MainAxisAlignment.center,\n        children: [\n          Icon(\n            Icons.show_chart,\n            size: 80,\n            color: Theme.of(context).brightness == Brightness.light\n                ? ChainyColors.lightSecondaryText\n                : ChainyColors.darkSecondaryText,\n          ),\n          SizedBox(height: 16),\n          Text(\n            'Your statistics will appear here',\n            style: Theme.of(context).textTheme.titleLarge,\n            textAlign: TextAlign.center,\n          ),\n          SizedBox(height: 8),\n          Padding(\n            padding: EdgeInsets.symmetric(horizontal: 32),\n            child: Text(\n              'Start tracking your habits to see your progress and trends over time.',\n              style: Theme.of(context).textTheme.bodyMedium,\n              textAlign: TextAlign.center,\n            ),\n          ),\n        ],\n      ),\n    );\n  }\n}\n```",
+        "testStrategy": "1. Widget tests for StatisticsScreen layout and components\n2. Unit tests for statistics calculation logic\n3. Integration tests for data visualization\n4. Test empty/low-data states\n5. Test with various data scenarios:\n   - New user with minimal data\n   - User with consistent habits\n   - User with inconsistent habits\n   - User with long streaks\n6. Test responsiveness on different screen sizes\n7. Performance testing with large datasets\n8. Visual testing for dark/light mode",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement UI components for statistics dashboard",
+            "description": "Create the UI components for the statistics dashboard including streak highlights, week comparisons, 30-day trends, and mini-heatmap widgets.",
+            "dependencies": [],
+            "details": "Implement the following UI components as shown in the example code:\n1. StreakHighlightCard - showing current streak with fire icon and encouragement message\n2. WeekComparisonCard - displaying this week vs last week with circular progress indicators\n3. ThirtyDayTrendCard - containing a line chart for 30-day visualization\n4. MonthHeatmapCard - showing a heatmap calendar for monthly overview\n5. EmptyStatsState - for users with no data yet\n\nEnsure all components follow the design system with proper spacing, typography, and color schemes for both light and dark modes.",
+            "status": "pending",
+            "testStrategy": "1. Create widget tests for each component to verify layout and appearance\n2. Test responsive behavior on different screen sizes\n3. Test both light and dark mode appearances\n4. Verify empty state displays correctly\n5. Test with various data scenarios (zero values, maximum values, negative trends)"
+          },
+          {
+            "id": 2,
+            "title": "Create data processing services for statistics calculation",
+            "description": "Develop services to process and calculate statistics data needed for the dashboard, including streak calculations, weekly comparisons, and trend analysis.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create the following data services:\n1. StatisticsProvider class that manages all statistics data\n2. StreakStats calculator to determine current and best streaks\n3. WeekComparisonStats processor to compare current week vs previous week\n4. ThirtyDayStats generator to create chart data for the trend visualization\n5. MonthHeatmapStats processor to generate heatmap data\n\nImplement methods to handle data aggregation, trend calculation, and percentage improvements. Ensure efficient data processing with caching mechanisms to avoid recalculating statistics unnecessarily.",
+            "status": "pending",
+            "testStrategy": "1. Unit tests for each statistics calculation method\n2. Test edge cases like empty data sets, partial data, and data spanning multiple months\n3. Test streak calculation logic with various patterns of completed/missed days\n4. Verify week comparison calculations with mock data\n5. Test performance with large datasets"
+          },
+          {
+            "id": 3,
+            "title": "Implement StatisticsScreen with responsive layout",
+            "description": "Create the main StatisticsScreen widget that integrates all components with a responsive layout and connects to the data services.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement the StatisticsScreen widget as shown in the example code:\n1. Create the main screen with Scaffold and AppBar\n2. Implement Consumer pattern to connect with StatisticsProvider\n3. Arrange all statistics components in a ListView with proper spacing\n4. Handle empty/low-data states with encouraging messages\n5. Implement responsive layout adjustments for different screen sizes (phone, tablet)\n6. Add loading states while statistics are being calculated\n7. Implement pull-to-refresh functionality to update statistics\n\nEnsure the screen performs well and maintains visual consistency across different device sizes and orientations.",
+            "status": "pending",
+            "testStrategy": "1. Integration tests for the complete statistics screen\n2. Test data flow from provider to UI components\n3. Test responsive layout on different screen sizes and orientations\n4. Verify loading states display correctly\n5. Test pull-to-refresh functionality\n6. Test navigation to and from the statistics screen"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Implement Achievements screen with badges",
+        "description": "Create the Achievements screen with a grid layout displaying badges for various accomplishments, including unlocked and locked states.",
+        "details": "1. Create an AchievementsScreen widget with a grid layout\n2. Define badge categories as specified in the PRD:\n   - First Steps\n   - Streak Milestones\n   - Habit Management\n   - Check-in Milestones\n   - Perfection\n   - Consistency\n\n3. Implement badge unlocking logic\n\n4. Create visual states for earned and locked badges\n\n5. Add animations and feedback for badge unlocks\n\nExample implementation:\n```dart\nclass AchievementsScreen extends StatelessWidget {\n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      appBar: AppBar(title: Text('Achievements')),\n      body: Consumer<AchievementProvider>(\n        builder: (context, achievementProvider, _) {\n          return GridView.builder(\n            padding: EdgeInsets.all(16),\n            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(\n              crossAxisCount: 3,\n              childAspectRatio: 0.8,\n              crossAxisSpacing: 16,\n              mainAxisSpacing: 16,\n            ),\n            itemCount: achievementProvider.allAchievements.length,\n            itemBuilder: (context, index) {\n              final achievement = achievementProvider.allAchievements[index];\n              return BadgeCard(\n                achievement: achievement,\n                isUnlocked: achievementProvider.isUnlocked(achievement.id),\n                progress: achievementProvider.getProgress(achievement.id),\n              );\n            },\n          );\n        },\n      ),\n    );\n  }\n}\n\nclass BadgeCard extends StatelessWidget {\n  final Achievement achievement;\n  final bool isUnlocked;\n  final double progress;\n  \n  const BadgeCard({\n    required this.achievement,\n    required this.isUnlocked,\n    required this.progress,\n  });\n  \n  @override\n  Widget build(BuildContext context) {\n    return GestureDetector(\n      onTap: () => _showBadgeDetails(context),\n      child: Card(\n        elevation: isUnlocked ? 4 : 1,\n        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),\n        child: Padding(\n          padding: EdgeInsets.all(8),\n          child: Column(\n            mainAxisAlignment: MainAxisAlignment.center,\n            children: [\n              Stack(\n                alignment: Alignment.center,\n                children: [\n                  Container(\n                    width: 60,\n                    height: 60,\n                    decoration: BoxDecoration(\n                      shape: BoxShape.circle,\n                      color: isUnlocked\n                          ? _getCategoryColor(achievement.category)\n                          : Theme.of(context).brightness == Brightness.light\n                              ? ChainyColors.lightInactiveGray\n                              : ChainyColors.darkInactiveGray,\n                      boxShadow: isUnlocked\n                          ? [\n                              BoxShadow(\n                                color: _getCategoryColor(achievement.category).withOpacity(0.3),\n                                blurRadius: 8,\n                                spreadRadius: 2,\n                              ),\n                            ]\n                          : [],\n                    ),\n                    child: Center(\n                      child: Icon(\n                        achievement.icon,\n                        color: Colors.white,\n                        size: 30,\n                      ),\n                    ),\n                  ),\n                  if (!isUnlocked && progress > 0)\n                    CircularProgressIndicator(\n                      value: progress,\n                      backgroundColor: Colors.transparent,\n                      strokeWidth: 3,\n                    ),\n                ],\n              ),\n              SizedBox(height: 8),\n              Text(\n                achievement.title,\n                textAlign: TextAlign.center,\n                style: TextStyle(\n                  fontWeight: isUnlocked ? FontWeight.bold : FontWeight.normal,\n                  color: isUnlocked\n                      ? Theme.of(context).brightness == Brightness.light\n                          ? ChainyColors.lightPrimaryText\n                          : ChainyColors.darkPrimaryText\n                      : Theme.of(context).brightness == Brightness.light\n                          ? ChainyColors.lightSecondaryText\n                          : ChainyColors.darkSecondaryText,\n                ),\n                maxLines: 2,\n                overflow: TextOverflow.ellipsis,\n              ),\n            ],\n          ),\n        ),\n      ),\n    );\n  }\n  \n  Color _getCategoryColor(AchievementCategory category) {\n    switch (category) {\n      case AchievementCategory.firstSteps:\n        return Colors.green;\n      case AchievementCategory.streakMilestones:\n        return Colors.orange;\n      case AchievementCategory.habitManagement:\n        return Colors.blue;\n      case AchievementCategory.checkInMilestones:\n        return Colors.purple;\n      case AchievementCategory.perfection:\n        return Colors.red;\n      case AchievementCategory.consistency:\n        return Colors.teal;\n    }\n  }\n  \n  void _showBadgeDetails(BuildContext context) {\n    showModalBottomSheet(\n      context: context,\n      shape: RoundedRectangleBorder(\n        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),\n      ),\n      builder: (context) => BadgeDetailsSheet(\n        achievement: achievement,\n        isUnlocked: isUnlocked,\n        progress: progress,\n      ),\n    );\n  }\n}\n\nclass Achievement {\n  final String id;\n  final String title;\n  final String description;\n  final IconData icon;\n  final AchievementCategory category;\n  final int targetValue;\n  \n  const Achievement({\n    required this.id,\n    required this.title,\n    required this.description,\n    required this.icon,\n    required this.category,\n    required this.targetValue,\n  });\n}\n\nenum AchievementCategory {\n  firstSteps,\n  streakMilestones,\n  habitManagement,\n  checkInMilestones,\n  perfection,\n  consistency,\n}\n```",
+        "testStrategy": "1. Widget tests for AchievementsScreen layout and components\n2. Unit tests for achievement unlocking logic\n3. Integration tests for badge interactions\n4. Test animations and visual feedback\n5. Test with various achievement states:\n   - All locked\n   - Some unlocked\n   - All unlocked\n   - Partial progress\n6. Test responsiveness on different screen sizes\n7. Visual testing for dark/light mode\n8. Test badge unlock animations and interactions",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create AchievementsScreen with Grid Layout",
+            "description": "Implement the basic AchievementsScreen widget with a grid layout to display achievement badges.",
+            "dependencies": [],
+            "details": "Create the AchievementsScreen widget with a Scaffold and AppBar. Implement a GridView.builder with appropriate padding, spacing, and cross-axis count. Set up the Consumer pattern to connect with the AchievementProvider. Ensure the grid is responsive and scrollable with proper item spacing and aspect ratio.",
+            "status": "pending",
+            "testStrategy": "Write widget tests to verify the grid layout renders correctly. Test different screen sizes to ensure responsive design. Verify scrolling behavior with a large number of achievements."
+          },
+          {
+            "id": 2,
+            "title": "Implement Badge Card Component",
+            "description": "Create the BadgeCard widget to display individual achievements with proper visual states for locked and unlocked badges.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement the BadgeCard widget with different visual states (locked/unlocked). Create the circular badge design with appropriate colors based on achievement category. Add progress indicators for partially completed achievements. Implement the tap gesture to show badge details. Style text elements for proper readability in both states. Add shadow effects for unlocked badges.",
+            "status": "pending",
+            "testStrategy": "Test rendering of both locked and unlocked states. Verify progress indicator displays correctly at different completion percentages. Test tap interaction opens the badge details modal. Verify proper styling and color application based on achievement category."
+          },
+          {
+            "id": 3,
+            "title": "Implement Achievement Data Model and Provider",
+            "description": "Create the Achievement data model and AchievementProvider to manage achievement states and unlocking logic.",
+            "dependencies": [
+              2
+            ],
+            "details": "Define the Achievement class with all required properties (id, title, description, icon, category, targetValue). Implement the AchievementCategory enum with all specified categories. Create the AchievementProvider class to manage achievement states, including methods for checking if achievements are unlocked, calculating progress, and handling achievement unlocking events. Implement the badge unlocking logic based on user actions and milestones.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the Achievement model and AchievementProvider. Test unlocking logic with various scenarios. Verify progress calculation is accurate. Test persistence of achievement states. Ensure all achievement categories are properly implemented."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement notification and reminder system",
+        "description": "Create a notification system that allows users to set up to 3 reminders per habit and handles snooze functionality.",
+        "details": "1. Set up local notifications using flutter_local_notifications package\n2. Create a ReminderService to manage notifications\n3. Implement reminder creation and editing in the habit form\n4. Add snooze functionality (+15 min, +1 hour)\n5. Respect Do-Not-Disturb settings\n6. Implement notification handling for different app states\n\nExample implementation:\n```dart\nclass ReminderService {\n  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;\n  final HabitRepository habitRepository;\n  \n  ReminderService(this.flutterLocalNotificationsPlugin, this.habitRepository);\n  \n  Future<void> initialize() async {\n    const AndroidInitializationSettings initializationSettingsAndroid =\n        AndroidInitializationSettings('app_icon');\n    \n    final DarwinInitializationSettings initializationSettingsIOS =\n        DarwinInitializationSettings(\n      requestSoundPermission: false,\n      requestBadgePermission: false,\n      requestAlertPermission: false,\n    );\n    \n    final InitializationSettings initializationSettings = InitializationSettings(\n      android: initializationSettingsAndroid,\n      iOS: initializationSettingsIOS,\n    );\n    \n    await flutterLocalNotificationsPlugin.initialize(\n      initializationSettings,\n      onDidReceiveNotificationResponse: _onNotificationTapped,\n    );\n  }\n  \n  Future<void> scheduleReminder(Reminder reminder) async {\n    final habit = await habitRepository.getHabitById(reminder.habitId);\n    if (habit == null) return;\n    \n    final androidDetails = AndroidNotificationDetails(\n      'habit_reminders',\n      'Habit Reminders',\n      channelDescription: 'Notifications for habit reminders',\n      importance: Importance.high,\n      priority: Priority.high,\n      color: habit.color,\n    );\n    \n    final iosDetails = DarwinNotificationDetails(\n      presentAlert: true,\n      presentBadge: true,\n      presentSound: true,\n    );\n    \n    final notificationDetails = NotificationDetails(\n      android: androidDetails,\n      iOS: iosDetails,\n    );\n    \n    // Create unique ID for this reminder\n    final notificationId = int.parse('${habit.id.hashCode}${reminder.id.hashCode}'.substring(0, 9));\n    \n    // Schedule notification\n    await flutterLocalNotificationsPlugin.zonedSchedule(\n      notificationId,\n      habit.name,\n      'Time to ${habit.name}!',\n      _nextInstanceOfTime(reminder.time),\n      notificationDetails,\n      androidAllowWhileIdle: true,\n      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,\n      matchDateTimeComponents: DateTimeComponents.time,\n      payload: jsonEncode({\n        'habitId': habit.id,\n        'reminderId': reminder.id,\n      }),\n    );\n  }\n  \n  Future<void> cancelReminder(String habitId, String reminderId) async {\n    final notificationId = int.parse('${habitId.hashCode}${reminderId.hashCode}'.substring(0, 9));\n    await flutterLocalNotificationsPlugin.cancel(notificationId);\n  }\n  \n  Future<void> snoozeReminder(String habitId, String reminderId, Duration duration) async {\n    final habit = await habitRepository.getHabitById(habitId);\n    if (habit == null) return;\n    \n    final androidDetails = AndroidNotificationDetails(\n      'habit_reminders',\n      'Habit Reminders',\n      channelDescription: 'Notifications for habit reminders',\n      importance: Importance.high,\n      priority: Priority.high,\n      color: habit.color,\n    );\n    \n    final iosDetails = DarwinNotificationDetails(\n      presentAlert: true,\n      presentBadge: true,\n      presentSound: true,\n    );\n    \n    final notificationDetails = NotificationDetails(\n      android: androidDetails,\n      iOS: iosDetails,\n    );\n    \n    // Create unique ID for this snoozed reminder\n    final notificationId = int.parse('${habitId.hashCode}${reminderId.hashCode}'.substring(0, 9));\n    \n    // Schedule snoozed notification\n    await flutterLocalNotificationsPlugin.zonedSchedule(\n      notificationId,\n      habit.name,\n      'Time to ${habit.name}! (Snoozed)',\n      tz.TZDateTime.now(tz.local).add(duration),\n      notificationDetails,\n      androidAllowWhileIdle: true,\n      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,\n      payload: jsonEncode({\n        'habitId': habitId,\n        'reminderId': reminderId,\n        'snoozed': true,\n      }),\n    );\n  }\n  \n  void _onNotificationTapped(NotificationResponse response) {\n    if (response.payload == null) return;\n    \n    try {\n      final payloadData = jsonDecode(response.payload!);\n      final habitId = payloadData['habitId'];\n      final reminderId = payloadData['reminderId'];\n      final snoozed = payloadData['snoozed'] ?? false;\n      \n      // Handle notification tap\n      // Navigate to habit details or show snooze options\n    } catch (e) {\n      print('Error parsing notification payload: $e');\n    }\n  }\n  \n  tz.TZDateTime _nextInstanceOfTime(TimeOfDay time) {\n    final now = tz.TZDateTime.now(tz.local);\n    var scheduledDate = tz.TZDateTime(\n      tz.local,\n      now.year,\n      now.month,\n      now.day,\n      time.hour,\n      time.minute,\n    );\n    \n    if (scheduledDate.isBefore(now)) {\n      scheduledDate = scheduledDate.add(Duration(days: 1));\n    }\n    \n    return scheduledDate;\n  }\n}\n\nclass Reminder {\n  final String id;\n  final String habitId;\n  final TimeOfDay time;\n  final List<int> daysOfWeek; // 1-7 for Monday-Sunday\n  \n  Reminder({\n    required this.id,\n    required this.habitId,\n    required this.time,\n    required this.daysOfWeek,\n  });\n  \n  // JSON serialization methods\n  Map<String, dynamic> toJson() { /* ... */ }\n  factory Reminder.fromJson(Map<String, dynamic> json) { /* ... */ }\n}\n\nclass ReminderFormWidget extends StatefulWidget {\n  final String habitId;\n  final List<Reminder> existingReminders;\n  final Function(List<Reminder>) onRemindersChanged;\n  \n  const ReminderFormWidget({\n    required this.habitId,\n    required this.existingReminders,\n    required this.onRemindersChanged,\n  });\n  \n  @override\n  _ReminderFormWidgetState createState() => _ReminderFormWidgetState();\n}\n\nclass _ReminderFormWidgetState extends State<ReminderFormWidget> {\n  late List<Reminder> _reminders;\n  \n  @override\n  void initState() {\n    super.initState();\n    _reminders = List.from(widget.existingReminders);\n  }\n  \n  @override\n  Widget build(BuildContext context) {\n    return Column(\n      crossAxisAlignment: CrossAxisAlignment.start,\n      children: [\n        Text('Reminders', style: Theme.of(context).textTheme.titleMedium),\n        SizedBox(height: 8),\n        ..._buildReminderWidgets(),\n        if (_reminders.length < 3)\n          TextButton.icon(\n            onPressed: _addReminder,\n            icon: Icon(Icons.add),\n            label: Text('Add Reminder'),\n          ),\n      ],\n    );\n  }\n  \n  List<Widget> _buildReminderWidgets() {\n    return _reminders.map((reminder) {\n      return Card(\n        margin: EdgeInsets.only(bottom: 8),\n        child: Padding(\n          padding: EdgeInsets.all(8),\n          child: Row(\n            children: [\n              Icon(Icons.access_time),\n              SizedBox(width: 8),\n              Text(\n                '${reminder.time.format(context)}',\n                style: Theme.of(context).textTheme.bodyLarge,\n              ),\n              Spacer(),\n              IconButton(\n                icon: Icon(Icons.edit),\n                onPressed: () => _editReminder(reminder),\n              ),\n              IconButton(\n                icon: Icon(Icons.delete),\n                onPressed: () => _deleteReminder(reminder),\n              ),\n            ],\n          ),\n        ),\n      );\n    }).toList();\n  }\n  \n  void _addReminder() async {\n    final TimeOfDay? time = await showTimePicker(\n      context: context,\n      initialTime: TimeOfDay.now(),\n    );\n    \n    if (time != null) {\n      final newReminder = Reminder(\n        id: UUID.v4().toString(),\n        habitId: widget.habitId,\n        time: time,\n        daysOfWeek: [1, 2, 3, 4, 5, 6, 7], // Default to every day\n      );\n      \n      setState(() {\n        _reminders.add(newReminder);\n      });\n      \n      widget.onRemindersChanged(_reminders);\n    }\n  }\n  \n  void _editReminder(Reminder reminder) async {\n    final TimeOfDay? time = await showTimePicker(\n      context: context,\n      initialTime: reminder.time,\n    );\n    \n    if (time != null) {\n      final updatedReminder = Reminder(\n        id: reminder.id,\n        habitId: reminder.habitId,\n        time: time,\n        daysOfWeek: reminder.daysOfWeek,\n      );\n      \n      setState(() {\n        final index = _reminders.indexWhere((r) => r.id == reminder.id);\n        if (index != -1) {\n          _reminders[index] = updatedReminder;\n        }\n      });\n      \n      widget.onRemindersChanged(_reminders);\n    }\n  }\n  \n  void _deleteReminder(Reminder reminder) {\n    setState(() {\n      _reminders.removeWhere((r) => r.id == reminder.id);\n    });\n    \n    widget.onRemindersChanged(_reminders);\n  }\n}\n```",
+        "testStrategy": "1. Unit tests for ReminderService functionality\n2. Widget tests for ReminderFormWidget\n3. Integration tests for notification scheduling\n4. Test snooze functionality\n5. Test Do-Not-Disturb respect\n6. Test notification handling in different app states:\n   - Foreground\n   - Background\n   - Terminated\n7. Test with various reminder configurations:\n   - Single reminder\n   - Multiple reminders\n   - Reminders at edge times (midnight, etc.)\n8. Test timezone handling\n9. Test notification permissions flow",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up local notifications infrastructure",
+            "description": "Implement the foundation for local notifications using flutter_local_notifications package and create the ReminderService class.",
+            "dependencies": [],
+            "details": "1. Add flutter_local_notifications and timezone packages to pubspec.yaml\n2. Create the ReminderService class with initialization methods\n3. Implement permission handling for notifications\n4. Set up notification channels with proper configuration\n5. Create methods for scheduling, canceling, and managing notifications\n6. Implement timezone handling for accurate scheduling",
+            "status": "pending",
+            "testStrategy": "1. Unit tests for ReminderService initialization\n2. Tests for permission handling\n3. Tests for notification scheduling logic\n4. Tests for timezone conversion"
+          },
+          {
+            "id": 2,
+            "title": "Implement reminder creation and editing UI",
+            "description": "Create the UI components for adding, editing, and managing up to 3 reminders per habit in the habit form.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Create the ReminderFormWidget as shown in the example\n2. Implement UI for displaying existing reminders\n3. Add functionality to add new reminders (up to 3)\n4. Implement time picker for selecting reminder times\n5. Add UI for editing existing reminders\n6. Implement deletion of reminders\n7. Connect the UI to the ReminderService for scheduling notifications",
+            "status": "pending",
+            "testStrategy": "1. Widget tests for ReminderFormWidget layout\n2. Tests for adding/editing/deleting reminders\n3. Tests for validation (max 3 reminders)\n4. Integration tests with ReminderService"
+          },
+          {
+            "id": 3,
+            "title": "Implement snooze functionality and notification handling",
+            "description": "Add snooze options to notifications and handle notification interactions in different app states.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "1. Implement the snoozeReminder method in ReminderService\n2. Create UI for snooze options (+15 min, +1 hour)\n3. Handle notification taps to navigate to appropriate screens\n4. Implement notification handling for different app states (foreground, background, terminated)\n5. Add respect for Do-Not-Disturb settings\n6. Create payload parsing for notifications to extract habit and reminder information\n7. Implement notification actions for quick responses",
+            "status": "pending",
+            "testStrategy": "1. Unit tests for snooze functionality\n2. Tests for notification payload parsing\n3. Integration tests for notification interactions\n4. Tests for Do-Not-Disturb respect\n5. Tests for different app states"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement onboarding flow",
+        "description": "Create a guided iOS-style onboarding flow that helps users set up their first habit with a personalized, step-by-step approach in dark mode.",
+        "status": "pending",
+        "dependencies": [
+          2,
+          5
+        ],
+        "priority": "medium",
+        "details": "Design a tap-based iOS onboarding flow for Chainy in dark mode that guides users through setting up their first habit with a focused, personal approach:\n\n1. Create an OnboardingScreen with a segmented progress indicator at the top\n2. Implement 5 sequential steps with one focused question per screen:\n   - Welcome/Name input screen\n   - Habit Name input screen\n   - Icon + Color selection screen\n   - Frequency selection screen\n   - Notification permission screen\n3. Design each screen with soft layout rhythm matching modern iOS setup flows\n4. Add primary CTA buttons positioned above the safe area for thumb reach\n5. Implement smooth transitions and microanimations between screens\n\nDetailed screen specifications:\n\n**Screen 0: Welcome/Name**\n- Large placeholder typography for name input\n- Friendly welcome message\n- Input transitions to clean headline format after entry\n\n**Screen 1: Habit Name**\n- Question: \"What habit do you want to build?\"\n- Large text input field\n- Motivational microcopy encouraging clear naming\n\n**Screen 2: Icon + Color Selection**\n- Minimalist, tappable icon grid\n- Color palette for personality assignment\n- Live preview of selected icon + color combination\n\n**Screen 3: Frequency Selection**\n- Tappable frequency cards (Daily, Multiple times per day, 3× per week, etc.)\n- Soft card design with ample tap targets\n\n**Screen 4: Enable Notifications**\n- Motivational explanation about reminders helping maintain streaks\n- Primary CTA triggering system notification permission\n- Supportive, celebratory tone\n\nExample implementation structure:\n```dart\nclass OnboardingFlow extends StatefulWidget {\n  @override\n  _OnboardingFlowState createState() => _OnboardingFlowState();\n}\n\nclass _OnboardingFlowState extends State<OnboardingFlow> {\n  final PageController _pageController = PageController();\n  int _currentStep = 0;\n  final int _totalSteps = 5;\n  \n  // User input data\n  String _userName = \"\";\n  String _habitName = \"\";\n  String _selectedIcon = \"\";\n  Color _selectedColor = Colors.blue;\n  String _selectedFrequency = \"Daily\";\n  bool _notificationsEnabled = false;\n  \n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      backgroundColor: ChainyColors.darkBackground,\n      body: SafeArea(\n        child: Column(\n          children: [\n            // Progress indicator\n            Padding(\n              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),\n              child: ProgressIndicator(\n                currentStep: _currentStep,\n                totalSteps: _totalSteps,\n              ),\n            ),\n            \n            // Main content\n            Expanded(\n              child: PageView(\n                controller: _pageController,\n                physics: NeverScrollableScrollPhysics(),\n                children: [\n                  NameInputScreen(\n                    onNameEntered: (name) {\n                      setState(() {\n                        _userName = name;\n                      });\n                    },\n                  ),\n                  HabitNameScreen(\n                    onHabitNameEntered: (name) {\n                      setState(() {\n                        _habitName = name;\n                      });\n                    },\n                  ),\n                  IconColorSelectionScreen(\n                    onSelectionComplete: (icon, color) {\n                      setState(() {\n                        _selectedIcon = icon;\n                        _selectedColor = color;\n                      });\n                    },\n                  ),\n                  FrequencySelectionScreen(\n                    onFrequencySelected: (frequency) {\n                      setState(() {\n                        _selectedFrequency = frequency;\n                      });\n                    },\n                  ),\n                  NotificationPermissionScreen(\n                    onPermissionResult: (granted) {\n                      setState(() {\n                        _notificationsEnabled = granted;\n                      });\n                    },\n                  ),\n                ],\n              ),\n            ),\n            \n            // Bottom navigation buttons\n            Padding(\n              padding: EdgeInsets.all(24),\n              child: PrimaryButton(\n                label: _currentStep < _totalSteps - 1 ? 'Next' : 'Get Started',\n                onPressed: () => _handleNavigation(),\n              ),\n            ),\n          ],\n        ),\n      ),\n    );\n  }\n  \n  void _handleNavigation() {\n    if (_currentStep < _totalSteps - 1) {\n      setState(() {\n        _currentStep++;\n      });\n      _pageController.animateToPage(\n        _currentStep,\n        duration: Duration(milliseconds: 300),\n        curve: Curves.easeInOut,\n      );\n    } else {\n      _completeOnboarding();\n    }\n  }\n  \n  void _completeOnboarding() async {\n    // Create the user's first habit\n    final habit = Habit(\n      id: UUID.v4().toString(),\n      name: _habitName,\n      icon: _selectedIcon,\n      color: _selectedColor,\n      recurrenceType: _parseFrequency(_selectedFrequency),\n      createdAt: DateTime.now(),\n      updatedAt: DateTime.now(),\n    );\n    \n    // Save the habit\n    final habitProvider = Provider.of<HabitProvider>(context, listen: false);\n    await habitProvider.saveHabit(habit);\n    \n    // Save user name and onboarding completion status\n    final prefs = await SharedPreferences.getInstance();\n    await prefs.setString('user_name', _userName);\n    await prefs.setBool('onboarding_completed', true);\n    \n    // Navigate to main app\n    Navigator.of(context).pushReplacement(\n      MaterialPageRoute(builder: (context) => MainScreen()),\n    );\n  }\n  \n  RecurrenceType _parseFrequency(String frequency) {\n    // Convert selected frequency to app's RecurrenceType\n    switch (frequency) {\n      case 'Daily':\n        return RecurrenceType.daily;\n      case 'Multiple times per day':\n        return RecurrenceType.multipleDaily;\n      case '3× per week':\n        return RecurrenceType.weekly;\n      // Add other cases as needed\n      default:\n        return RecurrenceType.daily;\n    }\n  }\n}\n\nclass ProgressIndicator extends StatelessWidget {\n  final int currentStep;\n  final int totalSteps;\n  \n  const ProgressIndicator({\n    required this.currentStep,\n    required this.totalSteps,\n  });\n  \n  @override\n  Widget build(BuildContext context) {\n    return Row(\n      children: List.generate(\n        totalSteps,\n        (index) => Expanded(\n          child: Container(\n            height: 4,\n            margin: EdgeInsets.symmetric(horizontal: 2),\n            decoration: BoxDecoration(\n              color: index <= currentStep\n                  ? ChainyColors.primaryAccent\n                  : ChainyColors.darkInactiveGray,\n              borderRadius: BorderRadius.circular(2),\n            ),\n          ),\n        ),\n      ),\n    );\n  }\n}\n\nclass PrimaryButton extends StatelessWidget {\n  final String label;\n  final VoidCallback onPressed;\n  \n  const PrimaryButton({\n    required this.label,\n    required this.onPressed,\n  });\n  \n  @override\n  Widget build(BuildContext context) {\n    return SizedBox(\n      width: double.infinity,\n      height: 56,\n      child: ElevatedButton(\n        onPressed: onPressed,\n        style: ElevatedButton.styleFrom(\n          backgroundColor: ChainyColors.primaryAccent,\n          foregroundColor: Colors.white,\n          shape: RoundedRectangleBorder(\n            borderRadius: BorderRadius.circular(16),\n          ),\n          elevation: 0,\n        ),\n        child: Text(\n          label,\n          style: TextStyle(\n            fontSize: 18,\n            fontWeight: FontWeight.w600,\n          ),\n        ),\n      ),\n    );\n  }\n}\n```\n\nMicroanimation suggestions:\n- Fade/slide transitions between screens\n- Subtle scale animation on button press\n- Smooth progress indicator updates\n- Gentle fade-in for input fields\n- Subtle bounce effect when selecting icons/colors\n- Soft highlight animation for selected frequency cards",
+        "testStrategy": "1. Widget tests for OnboardingFlow layout and components\n2. Integration tests for the complete 5-step onboarding flow\n3. Test user input validation and persistence\n4. Test habit creation with selected parameters\n5. Test navigation between screens and progress tracking\n6. Test notification permission handling\n7. Test onboarding state persistence\n8. Test onboarding on different iOS device sizes\n9. Visual testing for dark mode appearance\n10. Test animations and transitions\n11. Test accessibility features (VoiceOver compatibility)\n12. Test with different language settings (German/English)",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create OnboardingFlow widget structure",
+            "description": "Implement the base OnboardingFlow widget with PageView and progress indicator",
+            "dependencies": [],
+            "details": "Create the main OnboardingFlow widget that will manage the state and navigation between the different onboarding steps. Implement the segmented progress indicator at the top that shows the current step out of total steps. Set up the PageView with disabled swipe gestures to ensure guided navigation.",
+            "status": "pending",
+            "testStrategy": "Test the OnboardingFlow widget structure, page controller functionality, and progress indicator updates."
+          },
+          {
+            "id": 2,
+            "title": "Implement Welcome/Name input screen",
+            "description": "Create the first onboarding screen that welcomes users and collects their name",
+            "dependencies": [
+              1
+            ],
+            "details": "Design a clean, iOS-style welcome screen with large typography for name input. Include friendly welcome message and implement the transition effect where the input transforms into a headline format after entry. Add validation to ensure name is not empty before allowing to proceed.",
+            "status": "pending",
+            "testStrategy": "Test name input validation, keyboard handling, and transition animations."
+          },
+          {
+            "id": 3,
+            "title": "Implement Habit Name input screen",
+            "description": "Create the second screen that asks users what habit they want to build",
+            "dependencies": [
+              1
+            ],
+            "details": "Design the habit name input screen with the question \"What habit do you want to build?\" prominently displayed. Include a large text input field and motivational microcopy that encourages clarity in naming. Implement validation to ensure a habit name is provided.",
+            "status": "pending",
+            "testStrategy": "Test habit name input validation and keyboard interactions."
+          },
+          {
+            "id": 4,
+            "title": "Implement Icon and Color selection screen",
+            "description": "Create the third screen for selecting habit icon and color",
+            "dependencies": [
+              1
+            ],
+            "details": "Design a minimalist, tappable grid of icons and a color palette selector. Implement live preview of the selected icon and color combination. Ensure the selection process feels playful yet premium with appropriate feedback animations.",
+            "status": "pending",
+            "testStrategy": "Test icon and color selection interactions, preview updates, and selection persistence."
+          },
+          {
+            "id": 5,
+            "title": "Implement Frequency selection screen",
+            "description": "Create the fourth screen for selecting habit frequency",
+            "dependencies": [
+              1
+            ],
+            "details": "Design tappable frequency cards (Daily, Multiple times per day, 3× per week, etc.) with soft card design and ample tap targets. Implement selection state visualization and ensure the cards are large enough for confident tapping.",
+            "status": "pending",
+            "testStrategy": "Test frequency card selection, state changes, and selection persistence."
+          },
+          {
+            "id": 6,
+            "title": "Implement Notification permission screen",
+            "description": "Create the final screen that explains the importance of notifications and requests permission",
+            "dependencies": [
+              1
+            ],
+            "details": "Design a motivational explanation screen about how reminders help maintain streaks. Implement a primary CTA button that triggers the system notification permission dialog. Use supportive, lightly celebratory tone in the messaging.",
+            "status": "pending",
+            "testStrategy": "Test notification permission request flow and handling of permission results."
+          },
+          {
+            "id": 7,
+            "title": "Implement onboarding completion and habit creation",
+            "description": "Create the logic to save user data and create the first habit when onboarding completes",
+            "dependencies": [
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "details": "Implement the _completeOnboarding method to create the user's first habit with all the selected parameters. Save the user's name and mark onboarding as completed in SharedPreferences. Navigate to the main app screen after successful completion.",
+            "status": "pending",
+            "testStrategy": "Test habit creation with selected parameters, preference saving, and navigation to main app."
+          },
+          {
+            "id": 8,
+            "title": "Implement animations and transitions",
+            "description": "Add smooth animations and transitions between onboarding screens",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "details": "Implement fade/slide transitions between screens, subtle scale animation on button press, smooth progress indicator updates, gentle fade-in for input fields, subtle bounce effect for selections, and soft highlight animations for selected items.",
+            "status": "pending",
+            "testStrategy": "Test animation timing, smoothness, and consistency across different devices."
+          },
+          {
+            "id": 9,
+            "title": "Optimize for iOS dark mode",
+            "description": "Ensure all UI elements follow iOS dark mode guidelines and appearance",
+            "dependencies": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "details": "Apply proper dark mode styling to all onboarding screens, ensuring they match iOS design patterns. Use appropriate dark mode colors, contrasts, and visual hierarchy. Test on different iOS devices to ensure consistent appearance.",
+            "status": "pending",
+            "testStrategy": "Test dark mode appearance on various iOS devices and screen sizes."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Implement animations and haptic feedback",
+        "description": "Add micro-animations, haptic feedback, and visual effects to enhance the user experience, including segment completion animations, streak increments, and badge unlocks.",
+        "details": "1. Create animation utilities for common animations\n2. Implement haptic feedback service\n3. Add the following animations and feedback:\n   - Segment-Completion: Pop + Glow (200ms)\n   - Streak-Increment: Level-up Animation (300ms)\n   - Confetti: Subtle particle bursts (150ms)\n   - Haptic: Short for segment, enhanced for streak\n   - Badge-Unlock: Gentle pulse (400ms), Glow effect (600ms), Ribbon/Sparkle (800ms)\n   - Badge-Reveal: Staged reveal (500ms)\n   - Trend-Updates: Smooth animation for data changes (300ms)\n   - Streak-Expansion: Celebratory animation for streak increase (400ms)\n   - Weekly-Gains: Positive reinforcement for improvements (250ms)\n   - Data-Loading: Subtle loading animations (200ms)\n\n4. Respect system settings for reduced motion\n\nExample implementation:\n```dart\nclass AnimationUtils {\n  static Widget popAndGlow({\n    required Widget child,\n    required bool animate,\n    Color glowColor = Colors.white,\n    Duration duration = const Duration(milliseconds: 200),\n  }) {\n    return TweenAnimationBuilder<double>(\n      tween: Tween<double>(begin: 0.0, end: animate ? 1.0 : 0.0),\n      duration: duration,\n      curve: Curves.easeOutBack,\n      builder: (context, value, _) {\n        return Transform.scale(\n          scale: 1.0 + (0.2 * value),\n          child: Container(\n            decoration: BoxDecoration(\n              boxShadow: [\n                if (value > 0)\n                  BoxShadow(\n                    color: glowColor.withOpacity(0.7 * value),\n                    blurRadius: 10 * value,\n                    spreadRadius: 2 * value,\n                  ),\n              ],\n            ),\n            child: child,\n          ),\n        );\n      },\n    );\n  }\n  \n  static Widget confetti({\n    required Widget child,\n    required bool animate,\n    Duration duration = const Duration(milliseconds: 1500),\n  }) {\n    return Stack(\n      children: [\n        child,\n        if (animate)\n          ConfettiWidget(\n            confettiController: ConfettiController(duration: duration)..play(),\n            blastDirection: -pi / 2, // straight up\n            emissionFrequency: 0.05,\n            numberOfParticles: 20,\n            maxBlastForce: 5,\n            minBlastForce: 2,\n            gravity: 0.1,\n          ),\n      ],\n    );\n  }\n  \n  static Widget badgeUnlock({\n    required Widget child,\n    required bool animate,\n    Duration pulseDuration = const Duration(milliseconds: 400),\n    Duration glowDuration = const Duration(milliseconds: 600),\n    Duration sparkleDelay = const Duration(milliseconds: 300),\n    Duration sparkleDuration = const Duration(milliseconds: 800),\n  }) {\n    return StatefulBuilder(\n      builder: (context, setState) {\n        if (!animate) return child;\n        \n        return Stack(\n          alignment: Alignment.center,\n          children: [\n            // Pulse animation\n            TweenAnimationBuilder<double>(\n              tween: Tween<double>(begin: 0.0, end: 1.0),\n              duration: pulseDuration,\n              curve: Curves.easeOut,\n              builder: (context, value, _) {\n                return Transform.scale(\n                  scale: 1.0 + (0.2 * sin(value * pi)),\n                  child: child,\n                );\n              },\n            ),\n            \n            // Glow effect\n            TweenAnimationBuilder<double>(\n              tween: Tween<double>(begin: 0.0, end: 1.0),\n              duration: glowDuration,\n              curve: Curves.easeOut,\n              builder: (context, value, _) {\n                return Container(\n                  decoration: BoxDecoration(\n                    shape: BoxShape.circle,\n                    boxShadow: [\n                      BoxShadow(\n                        color: Colors.amber.withOpacity(0.7 * (1 - value)),\n                        blurRadius: 20 * (1 - value),\n                        spreadRadius: 10 * (1 - value),\n                      ),\n                    ],\n                  ),\n                );\n              },\n            ),\n            \n            // Sparkle effect (delayed)\n            FutureBuilder<void>(\n              future: Future.delayed(sparkleDelay),\n              builder: (context, snapshot) {\n                if (snapshot.connectionState != ConnectionState.done) {\n                  return SizedBox.shrink();\n                }\n                \n                return SparkleAnimation(\n                  duration: sparkleDuration,\n                );\n              },\n            ),\n          ],\n        );\n      },\n    );\n  }\n}\n\nclass HapticService {\n  static void lightImpact() {\n    HapticFeedback.lightImpact();\n  }\n  \n  static void mediumImpact() {\n    HapticFeedback.mediumImpact();\n  }\n  \n  static void heavyImpact() {\n    HapticFeedback.heavyImpact();\n  }\n  \n  static void selectionClick() {\n    HapticFeedback.selectionClick();\n  }\n  \n  static void segmentCompletion() {\n    HapticFeedback.lightImpact();\n  }\n  \n  static void streakIncrement() {\n    HapticFeedback.mediumImpact();\n  }\n  \n  static void badgeUnlock() {\n    HapticFeedback.heavyImpact();\n  }\n}\n\nclass SparkleAnimation extends StatefulWidget {\n  final Duration duration;\n  \n  const SparkleAnimation({\n    this.duration = const Duration(milliseconds: 800),\n  });\n  \n  @override\n  _SparkleAnimationState createState() => _SparkleAnimationState();\n}\n\nclass _SparkleAnimationState extends State<SparkleAnimation> with SingleTickerProviderStateMixin {\n  late AnimationController _controller;\n  late List<Sparkle> _sparkles;\n  \n  @override\n  void initState() {\n    super.initState();\n    _controller = AnimationController(vsync: this, duration: widget.duration);\n    _generateSparkles();\n    _controller.forward();\n  }\n  \n  void _generateSparkles() {\n    final random = Random();\n    _sparkles = List.generate(\n      12,\n      (index) => Sparkle(\n        position: Offset(\n          -50 + random.nextDouble() * 100,\n          -50 + random.nextDouble() * 100,\n        ),\n        color: [Colors.amber, Colors.yellow, Colors.white][random.nextInt(3)],\n        size: 2 + random.nextDouble() * 6,\n        angle: random.nextDouble() * 2 * pi,\n      ),\n    );\n  }\n  \n  @override\n  void dispose() {\n    _controller.dispose();\n    super.dispose();\n  }\n  \n  @override\n  Widget build(BuildContext context) {\n    return AnimatedBuilder(\n      animation: _controller,\n      builder: (context, child) {\n        return CustomPaint(\n          size: Size(100, 100),\n          painter: SparklePainter(\n            sparkles: _sparkles,\n            progress: _controller.value,\n          ),\n        );\n      },\n    );\n  }\n}\n\nclass Sparkle {\n  final Offset position;\n  final Color color;\n  final double size;\n  final double angle;\n  \n  Sparkle({\n    required this.position,\n    required this.color,\n    required this.size,\n    required this.angle,\n  });\n}\n\nclass SparklePainter extends CustomPainter {\n  final List<Sparkle> sparkles;\n  final double progress;\n  \n  SparklePainter({\n    required this.sparkles,\n    required this.progress,\n  });\n  \n  @override\n  void paint(Canvas canvas, Size size) {\n    final center = Offset(size.width / 2, size.height / 2);\n    \n    for (var sparkle in sparkles) {\n      final distance = sparkle.position.distance * progress * 2;\n      final opacity = (1 - progress) * 0.8;\n      \n      final paint = Paint()\n        ..color = sparkle.color.withOpacity(opacity)\n        ..style = PaintingStyle.fill;\n      \n      final position = center + Offset(\n        sparkle.position.dx * progress * 2,\n        sparkle.position.dy * progress * 2,\n      );\n      \n      canvas.save();\n      canvas.translate(position.dx, position.dy);\n      canvas.rotate(sparkle.angle + progress * 2 * pi);\n      \n      // Draw star shape\n      final path = Path();\n      final starSize = sparkle.size * (1 - progress * 0.5);\n      \n      for (var i = 0; i < 5; i++) {\n        final angle = i * 2 * pi / 5;\n        final point = Offset(cos(angle) * starSize, sin(angle) * starSize);\n        \n        if (i == 0) {\n          path.moveTo(point.dx, point.dy);\n        } else {\n          path.lineTo(point.dx, point.dy);\n        }\n        \n        final innerAngle = angle + pi / 5;\n        final innerPoint = Offset(\n          cos(innerAngle) * starSize * 0.4,\n          sin(innerAngle) * starSize * 0.4,\n        );\n        \n        path.lineTo(innerPoint.dx, innerPoint.dy);\n      }\n      \n      path.close();\n      canvas.drawPath(path, paint);\n      canvas.restore();\n    }\n  }\n  \n  @override\n  bool shouldRepaint(covariant SparklePainter oldDelegate) {\n    return oldDelegate.progress != progress;\n  }\n}\n```",
+        "testStrategy": "1. Unit tests for animation utilities\n2. Widget tests for animation components\n3. Integration tests for haptic feedback\n4. Test animations with different durations and parameters\n5. Test reduced motion settings compatibility\n6. Test animations on different devices and screen sizes\n7. Performance testing for complex animations\n8. Visual testing for animation quality and consistency\n9. Test battery impact of animations\n10. Test accessibility with animations enabled/disabled",
+        "priority": "low",
+        "dependencies": [
+          1,
+          4,
+          6,
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create animation utilities for common animations",
+            "description": "Develop reusable animation utility classes that will be used across the app for consistent animation effects.",
+            "dependencies": [],
+            "details": "Implement the AnimationUtils class with methods for common animations including popAndGlow, confetti, and badgeUnlock as shown in the example implementation. Ensure all animations respect the system settings for reduced motion. Include proper documentation for each animation utility method with parameters and usage examples.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for each animation utility method. Test animations with different parameters and durations. Create widget tests to verify visual appearance. Test compatibility with reduced motion settings."
+          },
+          {
+            "id": 2,
+            "title": "Implement haptic feedback service",
+            "description": "Create a service to manage haptic feedback throughout the app with different intensity levels for various user interactions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement the HapticService class with methods for different haptic feedback types (lightImpact, mediumImpact, heavyImpact, selectionClick). Create specific methods for app events like segmentCompletion, streakIncrement, and badgeUnlock. Add a system preference check to disable haptic feedback if the user has turned off haptics in system settings.",
+            "status": "pending",
+            "testStrategy": "Write unit tests for the HapticService methods. Create integration tests to verify haptic feedback is triggered at appropriate times. Test haptic feedback on different devices. Test that haptic feedback respects system settings."
+          },
+          {
+            "id": 3,
+            "title": "Integrate animations and haptic feedback with UI components",
+            "description": "Apply the created animation utilities and haptic feedback to the appropriate UI components and user interactions throughout the app.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Integrate animations for Segment-Completion (Pop + Glow, 200ms), Streak-Increment (Level-up Animation, 300ms), Confetti (Subtle particle bursts, 150ms), Badge-Unlock (Gentle pulse, Glow effect, Ribbon/Sparkle), Badge-Reveal (Staged reveal), Trend-Updates (Smooth animation for data changes), Streak-Expansion (Celebratory animation), Weekly-Gains (Positive reinforcement), and Data-Loading (Subtle loading animations). Trigger appropriate haptic feedback for each interaction. Ensure all animations and haptic feedback respect system settings for reduced motion and haptics.",
+            "status": "pending",
+            "testStrategy": "Create widget tests for each animated component. Test animations in different states and conditions. Perform integration tests to verify animations and haptic feedback are triggered at the right times. Test performance impact of animations. Verify animations work correctly on different devices and screen sizes."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-10-25T21:56:43.523Z",
+      "updated": "2025-10-25T21:56:43.523Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

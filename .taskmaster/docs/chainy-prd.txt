@@ -1,85 +1,289 @@
-1) Zielgruppe & Nutzungskontext
-Primäre Zielgruppe (MVP):
+# Chainy - Habit Tracking App PRD
+
+## 1) Zielgruppe & Nutzungskontext
+
+### Primäre Zielgruppe (MVP)
 Selbstoptimierer & Berufstätige (Professionals), die 3–8 Routinen täglich pflegen wollen (Fitness, Wasser, Fokuszeiten, Lesen) und Zuverlässigkeit/Tempo bevorzugen.
+
 Einsteiger werden durch simple Defaults abgeholt (Beispielgewohnheiten, geführtes Onboarding).
-Top-Use-Cases:
-Persönliche Routinen (Sport, Wasser, Schlaf, Lesen, Meditation).
-Leichte Arbeitsgewohnheiten (Deep-Work-Blöcke, Code-Reviews, Daily-Standup-Vorbereitung).
-Teams/soziale Features nicht im MVP (später Challenges/Sharing).
-Plattformen zum Start:
-Mobile zuerst: iOS & Android (Flutter).
-Web (PWA) später sobald Sync & Accounts stabil sind.
-2) Funktionsumfang & Priorisierung (MVP)
-Habiterstellung (Pflichtfelder):
-Name, Icon/Emoji, Farbe, Zieltyp (binär/quantitativ), Recurrence.
-Optional: Notiz. (Pflicht nur, wenn später für Statistiken nötig – im MVP optional lassen.)
-Recurrence-Modelle (MVP):
-Täglich (1×/Tag, binär oder quantitativ).
-Mehrfach/Tag (z. B. „Wasser 8×/Tag“ – integer Sollwert).
-Wöchentlich an ausgewählten Tagen (BYDAY: MO–SO).
-Benutzerdefiniert: Intervall (INTERVAL=2 o. ä.), BYDAY/COUNT/UNTIL in vereinfachter RFC5545-Anmutung (intern strukturiert speichern, UI simpel halten).
-Zieleinheit:
-Binär (erledigt/nicht).
-Quantitativ (Ganzzahl, optional Einheit-Label, z. B. „Gläser“, „Minuten“).
-Home-Screen Interaktion:
-Ein-Tap „Erledigt“ für binäre Habits.
-Quick-Stepper (±) für quantitative Habits.
-Swipe: rechts = erledigt/inkrement; links = Rückgängig/Notiz.
-Default-Sicht: Heute; Wochenansicht per Toggle.
-Streaks & Status:
-Tagesabschluss um lokale 00:00 (siehe Zeitzonenregeln).
-Verpasst: wenn Tagesziel bis 00:00 lokal nicht erfüllt.
-Streak-Freeze/Joker: optional 1×/Monat (MVP-einfach: manuell einlösbar; verhindert Streak-Abbruch an genau 1 Tag).
-Statistiken (MVP-Minimum):
-Aktuelle Streak-Länge.
-Wochenabschlussquote (aktuelle & letzte Woche).
-Rolling 7/30 Tage Erfüllung.
-Mini-Kalender-Heatmap (MVP: kompaktes Grid; Pro-Version später detaillierter).
-Gamification (MVP):
-Badges: „7-Tage-Streak“, „30 Tage“, „100 Check-ins“, „5 Habits angelegt“, „Erste Woche 80%+“.
-Kein XP/Level im MVP.
-Haptik/Animationen: kurzes Haptic + Micro-Animation bei Erfolg.
-Benachrichtigungen/Reminders:
-Pro Habit mehrere Reminder (0–3).
-Snooze (z. B. +15 Min, +1 Std).
-Do-Not-Disturb respektieren (OS-Standard, ruhige Zeiten in App konfigurierbar).
-Suche/Filter/Sortierung:
-Filter: fällig, erledigt, Tag, Farbe.
-Sortierung (Default): Fälligkeit > Priorität > manuell.
-Onboarding:
-3-Schritte-Guide + 2–3 Beispielgewohnheiten (Wasser, Lesen, Schritte).
-Internationalisierung: Start Deutsch; Englisch in Post-MVP.
-3) UX & Informationsarchitektur
-Navigation (Tabbar):
-Home, Statistik, Erfolge, Einstellungen.
-Home-Layout:
-Karten je Habit mit: Name, Icon/Farbe, heutiges Ziel/Soll-Ist, aktueller Streak, % Woche (akt./letzte), Status „verpasst“ (falls zutreffend), Primary-Action (Tap/Stepper).
-Schnell-Add-Button (FAB).
-Detailansicht Habit:
-Historie: Mini-Heatmap + Liste.
-Ziele/Recurrence, Reminder, Bearbeiten/Löschen.
-Manuelles Nachtragen (gemäß Regeln, s. u.).
-Leere Zustände:
-Motivierende Micro-copy + „Erstes Habit anlegen“ (Template-Chips).
-Barrierefreiheit:
-Dynamic Type, sprechende Labels, hoher Kontrast, Touch-Ziele ≥44 pt.
-4) Datenmodell & Regeln
-Haupteinheiten:
-Habit: id, name, icon, color, type(binär|quant), target_value(int, nullable), unit(string nullable), priority(int), created_at, archived(bool).
-Schedule: habit_id(FK), rrule_struct(JSON: freq, interval, byday[], count, until).
-Reminder: id, habit_id(FK), time(LocalTime), days(Bitmask/BYDAY), enabled.
-Checkin: id, habit_id(FK), date(LocalDate), value(int), source(manual|reminder|quick), created_at.
-Settings: timezone, day_rollover(“00:00”), dnd_window, locale, backup_flags.
-BadgeUnlock: id, badge_code, unlocked_at.
-Zeitzone & Stichtag:
-Tageswechsel lokal 00:00.
-Reisen/Zeitzonenwechsel: Tagesgrenze folgt aktueller Gerätezeitzone. Checkins speichern als LocalDate + TZ-Info; Ableitung ins UTC für Sync.
-DST-Wechsel: Tagesgrenze bleibt 00:00 lokale Zeit (kein Rückdatieren).
-Streak-Logik:
-Binär: 1 pro Tag nötig.
-Quantitativ/Mehrfach: Streak zählt nur bei Zielerfüllung (≥ target_value).
-„Verpasst“ entsteht bei Ziel < target_value zum Tagesende.
-Joker/Freeze: markiert einen Tag als „neutral“ (Streak bleibt, Statistik zeigt gefrorenen Tag).
-Nachträgliche Checks:
-Erlaubt bis 1 Tag rückwirkend 
-Kein Nachtragen über Joker-Tag hinaus, um Missbrauch zu verhindern.
+
+### Top-Use-Cases
+- Persönliche Routinen (Sport, Wasser, Schlaf, Lesen, Meditation)
+- Leichte Arbeitsgewohnheiten (Deep-Work-Blöcke, Code-Reviews, Daily-Standup-Vorbereitung)
+- Teams/soziale Features nicht im MVP (später Challenges/Sharing)
+
+## 2) Funktionsumfang & Priorisierung (MVP)
+
+### Habiterstellung (Pflichtfelder)
+- Name, Icon/Emoji, Farbe, Zieltyp (binär/quantitativ), Recurrence
+- Optional: Notiz (Pflicht nur, wenn später für Statistiken nötig – im MVP optional lassen)
+
+### Recurrence-Modelle (MVP)
+- **Täglich**: 1×/Tag, binär oder quantitativ
+- **Mehrfach/Tag**: z. B. „Wasser 8×/Tag" – integer Sollwert
+- **Wöchentlich**: an ausgewählten Tagen (BYDAY: MO–SO)
+- **Benutzerdefiniert**: Intervall (INTERVAL=2 o. ä.), BYDAY/COUNT/UNTIL in vereinfachter RFC5545-Anmutung (intern strukturiert speichern, UI simpel halten)
+
+### Zieleinheit
+- **Binär**: erledigt/nicht
+- **Quantitativ**: Ganzzahl, optional Einheit-Label, z. B. „Gläser", „Minuten"
+
+### Home-Screen Interaktion (iOS-Segmentiert)
+- **Segment-Tap**: Einzelnes Segment aktivieren/deaktivieren (binär/quantitativ)
+- **Segment-Animation**: Pop + Glow bei Completion, subtile Confetti bei Streak-Increment
+- **Haptic Feedback**: Kurzes Haptic bei Segment-Completion, verstärkt bei Streak-Increment
+- **Swipe-Gesten**: Rechts = erledigt/inkrement, Links = Rückgängig/Notiz
+- **Wochen-Kontext**: Kompakte Wochen-Strip (Mo-So) als Mini-Marks unter Haupt-Timeline
+- **Default-Sicht**: Heute; Wochenansicht per Toggle
+- **Edge Cases**: Variable Tagesziele (1-8), lange Habit-Namen (truncate/wrap), States: nicht gestartet, teilweise, komplett, überfällig
+
+### Streaks & Status
+- Tagesabschluss um lokale 00:00 (siehe Zeitzonenregeln)
+- Verpasst: wenn Tagesziel bis 00:00 lokal nicht erfüllt
+- Streak-Freeze/Joker: optional 1×/Monat (MVP-einfach: manuell einlösbar; verhindert Streak-Abbruch an genau 1 Tag)
+
+### Statistiken (MVP-Minimum) - iOS-Dashboard
+- **Streak-Highlight**: Prominente, feierliche Darstellung der aktuellen Streak-Länge
+- **Wochen-Vergleich**: Kompakte Darstellung (diese vs. letzte Woche) mit positiven Verstärkungs-Cues
+- **30-Tage-Trend**: Vereinfachte Linien-/Balken-Visualisierung für schnelle Übersicht
+- **Mini-Heatmap**: Saubere, minimalistische Monats-Übersicht mit Farbintensität für Konsistenz
+- **Personal Growth Focus**: Dashboard-Gefühl statt Analytics-Druck
+- **Empty States**: Ermutigende Botschaften für neue Nutzer mit wenig Historie
+
+### Gamification (MVP) - iOS-Segmentiert
+- **Badges**: Umfassende Badge-Kategorien (siehe Erfolge-Screen)
+- **Segment-Completion**: Pop + Glow Animation bei jedem Segment
+- **Streak-Increment**: Level-up Animation + verstärktes Haptic
+- **Confetti-Effekte**: Subtile Partikel-Bursts bei Segment-Completion (produktivitäts-kontext)
+- **Haptic-Feedback**: Kurzes Haptic bei Segment, verstärkt bei Streak-Increment
+- **Visual-Feedback**: Segment-Lighting mit kurzer Glow-Animation
+- **Badge-Unlock**: Sanfte Puls-Animation, Glow-Effekt, Ribbon/Sparkle
+- Kein XP/Level im MVP
+
+### Benachrichtigungen/Reminders
+- Pro Habit mehrere Reminder (0–3)
+- Snooze (z. B. +15 Min, +1 Std)
+- Do-Not-Disturb respektieren (OS-Standard, ruhige Zeiten in App konfigurierbar)
+
+### Suche/Filter/Sortierung
+- **Filter**: fällig, erledigt, Tag, Farbe
+- **Sortierung (Default)**: Fälligkeit > Priorität > manuell
+
+### Onboarding
+- 3-Schritte-Guide + 2–3 Beispielgewohnheiten (Wasser, Lesen, Schritte)
+- Internationalisierung: Start Deutsch; Englisch in Post-MVP
+
+---
+
+## 3) UX & Informationsarchitektur
+
+### Navigation (Tabbar)
+Home, Statistik, Erfolge, Einstellungen
+
+### Home-Layout (iOS-Optimiert)
+**Vertikale Liste** mit einem Habit pro Zeile, optimiert für schnelles Scannen von 10-20 Habits:
+
+**Habit-Row Struktur:**
+- **Links**: Identifikations-Icon (Emoji/Symbol) + Habit-Name
+- **Mitte**: Segmentierte Fortschritts-Timeline (heutiges Ziel als Segmente, z.B. 3 Segmente für 3×/Tag)
+- **Rechts**: Prominenter Streak-Indikator (Badge/Label)
+- **Unten**: Kompakte Wochen-Strip (Mo-So) als Mini-Marks, niedrig kontrastiert
+
+**Interaktive Elemente:**
+- **Segment-Tap**: Einzelnes Segment aktivieren/deaktivieren
+- **Swipe-Gesten**: Rechts = erledigt/inkrement, Links = Rückgängig/Notiz
+- **Haptic Feedback**: Kurzes Haptic bei Segment-Completion
+- **Micro-Animationen**: Pop + Glow bei Segment-Completion, Confetti bei Streak-Increment
+
+**Visual Hierarchy:**
+- Name & Icon: Primär (fett, hoher Kontrast)
+- Segmentierte Timeline: Fokales interaktives Element
+- Streak: Prominenter Badge/Indikator
+- Wochen-Strip: Subtile Kontext-Information
+
+**Dichte & Skalierung:**
+- Optimiert für 10-20 Habits ohne visuelle Überlastung
+- Touch-Targets ≥44pt (Apple HIG)
+- Dynamic Type Support
+- Light/Dark Mode Varianten
+
+**Empty Habit Row (Add New):**
+- **Position**: Am Ende der Liste als natürliche Erweiterung
+- **Visual Design**: Niedrige Betonung, Placeholder-Erscheinung
+- **Icon**: Plus (+) Symbol, subtil
+- **Label**: "Add new habit" oder "Create habit" als Hinweis
+- **Accent**: Ruhiger Akzent zur Signalisierung der Interaktivität
+- **Interaction**: Tap öffnet Habit-Erstellung
+- **Styling**: Visuell unterscheidbar aber strukturell integriert
+
+**Schnell-Add-Button (FAB)**
+
+### Detailansicht Habit
+- **Historie**: Mini-Heatmap + Liste
+- **Ziele/Recurrence**: Reminder, Bearbeiten/Löschen
+- **Manuelles Nachtragen**: gemäß Regeln, s. u.
+
+### Statistik-Screen (iOS-Analytics)
+**Dashboard-Layout** mit motivierendem, persönlichem Wachstums-Fokus in Dark Mode:
+
+**Haupt-Sektionen:**
+- **Streak-Highlight**: Prominente, feierliche Darstellung der aktuellen Streak-Länge
+- **Wochen-Vergleich**: Kompakte Darstellung (diese vs. letzte Woche) mit positiven Verstärkungs-Cues
+- **30-Tage-Trend**: Vereinfachte Linien-/Balken-Visualisierung für schnelle Übersicht
+- **Mini-Heatmap**: Saubere, minimalistische Monats-Übersicht mit Farbintensität für Konsistenz
+
+**Visual Design:**
+- **Dark Mode Ästhetik**: Weiche Kontraste, motivierende Akzent-Farben
+- **Breathing Space**: Atmungsraum zwischen Daten-Sektionen für Progression-Gefühl
+- **Emotional Encouragement**: Persönliches Wachstum statt Performance-Druck
+- **Clarity First**: Lesbarkeit und schnelle Erfassung priorisiert
+
+**Micro-Animationen:**
+- **Trend-Updates**: Sanfte Animation bei Daten-Änderungen
+- **Streak-Expansion**: Feierliche Animation bei Streak-Erhöhung
+- **Weekly-Gains**: Positive Verstärkung bei Verbesserungen
+- **Data-Loading**: Subtile Lade-Animationen
+
+**Empty/Low-Data States:**
+- **Beginner State**: Ermutigende Botschaften für neue Nutzer
+- **Improving State**: Positive Verstärkung bei Fortschritten
+- **Consistent State**: Belohnung für regelmäßige Nutzung
+- **Personal Growth Focus**: Dashboard-Gefühl statt Analytics-Druck
+
+**Grid-Skalierung:**
+- Responsive Layout für verschiedene Bildschirmgrößen
+- Touch-Targets ≥44pt (Apple HIG)
+- Optimiert für schnelle Übersicht und Motivation
+
+### Erfolge-Screen (iOS-Badges)
+**Grid-Layout** mit motivierendem, achievement-orientiertem Design in Dark Mode:
+
+**Badge-Kategorien:**
+- **Erste Schritte**: "First Check-in", "First Week", "First Habit Created"
+- **Streak-Milestones**: "7 Days in a Row", "30 Days in a Row", "100 Days in a Row"
+- **Habit-Management**: "3 Active Habits", "5 Active Habits", "10 Active Habits"
+- **Check-in-Milestones**: "100 Total Check-ins", "500 Total Check-ins", "1000 Total Check-ins"
+- **Perfektion**: "Perfect Week", "Perfect Month", "Perfect Quarter"
+- **Konsistenz**: "80% Week", "90% Month", "95% Quarter"
+
+**Visual Design:**
+- **Earned Badges**: Illuminiert, subtile Animation, weicher Glow-Effekt
+- **Locked Badges**: Gedimmt/transluzent, "Potential Energy" Gefühl
+- **Hover/Tap States**: Tooltip/Micro-Panel mit Badge-Beschreibung
+- **Progress Indicators**: Für teilweise erreichte Meta-Badges (z.B. "90/100 Check-ins")
+- **Atmospheric Dark Mode**: Sparsame Farb-Highlights für Kategorien/Rarität
+- **Airy Spacing**: Premium, nicht überladen
+
+**Animation & Feedback:**
+- **Unlock-Animation**: Sanfter Puls, Glow nach außen, Ribbon/Sparkle-Effekt
+- **Reveal-Animation**: Gestufte Enthüllung bei Badge-Freischaltung
+- **Celebratory Accents**: Weiche Highlights für erreichte Badges
+- **Future Placeholder**: Leerer Badge-Slot für zukünftige Achievements
+
+**Grid-Skalierung:**
+- Optimiert für 12-30 Badges
+- Responsive Layout für verschiedene Bildschirmgrößen
+- Touch-Targets ≥44pt (Apple HIG)
+
+---
+
+
+
+
+### Streak-Logik
+- **Binär**: 1 pro Tag nötig
+- **Quantitativ/Mehrfach**: Streak zählt nur bei Zielerfüllung (≥ target_value)
+- „Verpasst" entsteht bei Ziel < target_value zum Tagesende
+
+### Nachträgliche Checks
+- Erlaubt bis 1 Tag rückwirkend
+
+---
+
+## 5) Design System & Farbpalette
+
+### Farbpalette "iOS-Optimiert" (Light & Dark Mode)
+**Light Mode:**
+- **Background** (#FFFFFF): Primär-App-Hintergrund
+- **Card** (#F2F2F7): Habit-Rows, sekundäre Oberflächen
+- **Primary Text** (#000000): Habit-Namen, Hauptinhalt
+- **Secondary Text** (#8E8E93): Sekundärtext, Tageslabels
+- **Accent Blue** (#007AFF): Aktive Segmente, interaktive Elemente
+- **Success Green** (#34C759): Completed Segmente, Erfolgsindikatoren
+- **Warning Orange** (#FF9500): Streak-Flammen, Warnungen
+- **Inactive Gray** (#C7C7CC): Inaktive Segmente, deaktivierte Zustände
+
+**Dark Mode:**
+- **Background** (#000000): Primär-App-Hintergrund
+- **Card** (#1C1C1E): Habit-Rows, sekundäre Oberflächen
+- **Primary Text** (#FFFFFF): Habit-Namen, Hauptinhalt
+- **Secondary Text** (#8E8E93): Sekundärtext, Tageslabels
+- **Accent Blue** (#0A84FF): Aktive Segmente, interaktive Elemente
+- **Success Green** (#30D158): Completed Segmente, Erfolgsindikatoren
+- **Warning Orange** (#FF9F0A): Streak-Flammen, Warnungen
+- **Inactive Gray** (#2C2C2E): Inaktive Segmente, deaktivierte Zustände
+
+### Flutter Implementation (iOS-Optimiert)
+```dart
+class ChainyColors {
+  // Light Mode
+  static const Color lightBackground = Color(0xFFFFFFFF);
+  static const Color lightCard = Color(0xFFF2F2F7);
+  static const Color lightPrimaryText = Color(0xFF000000);
+  static const Color lightSecondaryText = Color(0xFF8E8E93);
+  static const Color lightAccentBlue = Color(0xFF007AFF);
+  static const Color lightSuccessGreen = Color(0xFF34C759);
+  static const Color lightWarningOrange = Color(0xFFFF9500);
+  static const Color lightInactiveGray = Color(0xFFC7C7CC);
+  
+  // Dark Mode
+  static const Color darkBackground = Color(0xFF000000);
+  static const Color darkCard = Color(0xFF1C1C1E);
+  static const Color darkPrimaryText = Color(0xFFFFFFFF);
+  static const Color darkSecondaryText = Color(0xFF8E8E93);
+  static const Color darkAccentBlue = Color(0xFF0A84FF);
+  static const Color darkSuccessGreen = Color(0xFF30D158);
+  static const Color darkWarningOrange = Color(0xFFFF9F0A);
+  static const Color darkInactiveGray = Color(0xFF2C2C2E);
+}
+```
+
+### Verwendungsrichtlinien (iOS-Segmentiert)
+**Segment-Timeline:**
+- **Completed Segments**: Success Green mit Glow-Effekt
+- **Active Segments**: Accent Blue (interaktiver Zustand)
+- **Inactive Segments**: Inactive Gray (outlined)
+- **Streak Indicators**: Warning Orange für aktive Streaks
+
+**Habit-Row Layout:**
+- **Background**: Card-Farbe (Light/Dark Mode)
+- **Primary Text**: Habit-Namen in Primary Text-Farbe
+- **Secondary Text**: Streak-Info, Wochen-Kontext in Secondary Text-Farbe
+- **Touch Targets**: ≥44pt (Apple HIG)
+
+**Empty Habit Row Styling:**
+- **Background**: Subtile Card-Farbe mit reduzierter Opazität
+- **Icon**: Plus (+) in Secondary Text-Farbe, leicht größer
+- **Text**: "Add new habit" in Secondary Text-Farbe, kursiv
+- **Border**: Subtile gestrichelte Linie (optional)
+- **Hover/Tap**: Leichte Akzent-Farbe bei Interaktion
+
+**Animation & Feedback:**
+- **Segment-Completion**: Pop + Glow (200ms)
+- **Streak-Increment**: Level-up Animation (300ms)
+- **Confetti**: Subtile Partikel-Bursts (150ms)
+- **Haptic**: Kurz bei Segment, verstärkt bei Streak
+- **Badge-Unlock**: Sanfter Puls (400ms), Glow-Effekt (600ms), Ribbon/Sparkle (800ms)
+- **Badge-Reveal**: Gestufte Enthüllung (500ms)
+- **Trend-Updates**: Sanfte Animation bei Daten-Änderungen (300ms)
+- **Streak-Expansion**: Feierliche Animation bei Streak-Erhöhung (400ms)
+- **Weekly-Gains**: Positive Verstärkung bei Verbesserungen (250ms)
+- **Data-Loading**: Subtile Lade-Animationen (200ms)
+
+### Accessibility (iOS-Optimiert)
+- **Dynamic Type**: Vollständige Unterstützung für alle Text-Größen
+- **VoiceOver**: Sprechende Labels für alle interaktiven Elemente
+- **Kontrast**: 4.5:1 für normalen Text, 3:1 für großen Text (WCAG AA)
+- **High-Contrast**: Automatische Anpassung an System-Einstellungen
+- **Reduced Motion**: Respektiert "Reduce Motion" Einstellungen
+- **Touch Targets**: Mindestens 44pt für alle interaktiven Elemente
