@@ -100,7 +100,7 @@
         "dependencies": [
           2
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -108,7 +108,7 @@
             "description": "Create the CheckIn class with all required fields and implement JSON serialization/deserialization methods.",
             "dependencies": [],
             "details": "Define the CheckIn class with the following fields: id (UUID), habitId (UUID), date (DateTime), value (int), note (String, optional), createdAt (DateTime), updatedAt (DateTime), and isBackfilled (bool). Implement toJson() and fromJson() methods for serialization. Create unit tests to verify proper serialization and deserialization of the model. Ensure proper type validation and error handling for all fields.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for CheckIn model creation with various parameters. Test serialization/deserialization with valid and invalid JSON data. Verify field constraints and default values are properly applied."
           },
           {
@@ -119,7 +119,7 @@
               1
             ],
             "details": "Create a CheckInRepository class that handles creating, reading, updating, and deleting check-in records. Implement methods for getCheckInsForHabit(habitId), addCheckIn(checkIn), updateCheckIn(checkIn), deleteCheckIn(id), and getCheckInsByDateRange(habitId, startDate, endDate). Ensure proper error handling and transaction management. The repository should use the appropriate storage mechanism (SQLite, Hive, or other local database) consistent with the rest of the application.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for each repository method using mock database connections. Test edge cases like empty results, database errors, and concurrent operations. Verify proper error propagation and transaction handling."
           },
           {
@@ -131,7 +131,7 @@
               2
             ],
             "details": "Implement a StreakService class that calculates current streak length based on check-in history. Handle different habit types (binary vs. quantitative) with appropriate goal completion logic. Implement streak calculation considering midnight cutoffs, retroactive check-ins (up to 1 day back), and streak freeze/joker feature (once per month). Create methods for getCurrentStreak(habitId), getLongestStreak(habitId), and applyStreakFreeze(habitId, date). Ensure calculations are timezone-aware and handle edge cases like daylight saving time changes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create comprehensive unit tests for streak calculations with various scenarios: continuous streaks, broken streaks, retroactive check-ins, streak freezes. Test edge cases like timezone changes, month boundaries, and leap years. Verify correct behavior for both binary and quantitative habits with different target values."
           }
         ]
@@ -545,7 +545,7 @@
     ],
     "metadata": {
       "created": "2025-10-25T21:56:43.523Z",
-      "updated": "2025-10-26T00:35:26.005Z",
+      "updated": "2025-10-26T00:45:50.894Z",
       "description": "Tasks for master context"
     }
   }
