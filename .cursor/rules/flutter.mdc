@@ -28,6 +28,7 @@ Establish consistent Flutter and Dart development standards for performance opti
   - Prefer immutability with const constructors
   - Encapsulate data in composite types instead of primitives
   - Use classes with internal validation for data integrity
+  - **Migration Safety:** When adding required fields to existing data models, provide backward-compatible defaults in persistence layers
 - **Initialization Safety:**
   - **CRITICAL:** Avoid `late` fields in classes with public methods to prevent race conditions
   - Prefer nullable types with explicit initialization checks over `late` fields
@@ -59,6 +60,15 @@ Establish consistent Flutter and Dart development standards for performance opti
 - **Test Coverage:** Use proper test coverage tools to ensure comprehensive testing
 - **Test Naming:** Follow proper test naming conventions for clarity and maintainability
 - **CI/CD Testing:** Implement proper CI/CD testing pipelines for automated quality assurance
+- **Test Environment Setup:**
+  - **CRITICAL:** Use dedicated test helpers for complex dependencies (databases, state management)
+  - **Hive Testing:** Use `hive` package instead of `hive_flutter` in tests to avoid platform channel issues
+  - **Riverpod Testing:** Providers require proper container setup and initialization in test environments
+  - **Test Isolation:** Ensure proper cleanup between tests to prevent state leakage
+- **Code Generation Testing:**
+  - **CRITICAL:** Always verify code generation dependencies before removing annotations
+  - Run `flutter pub run build_runner build --delete-conflicting-outputs` after model changes
+  - Test generated code functionality after regeneration
 
 ## **Examples / References**
 ```dart
@@ -96,12 +106,32 @@ class Repository {
   }
 }
 
-// Bad: Late field race condition
-class Repository {
-  late Box<Data> _box; // Can cause LateInitializationError
+
+// Good: Test helper for complex dependencies
+class HiveTestHelper {
+  static Future<void> initializeHive() async {
+    final testDir = Directory.systemTemp.createTempSync('hive_test_');
+    Hive.init(testDir.path); // Use hive, not hive_flutter
+  }
   
-  Future<List<Data>> getAllData() async {
-    return _box.values.toList(); // May fail
+  static Future<void> cleanupHive() async {
+    await Hive.close();
+  }
+}
+
+// Good: Migration-safe data adapter
+class HabitDtoAdapter extends TypeAdapter<HabitDto> {
+  @override
+  HabitDto read(BinaryReader reader) {
+    final fields = <int, dynamic>{
+      for (int i = 0; i < reader.readByte(); i++) 
+        reader.readByte(): reader.read(),
+    };
+    return HabitDto(
+      // ... existing fields
+      progressToday: fields[7] as int? ?? 0, // Migration-safe default
+      lastResetAt: fields[8] as String? ?? DateTime.now().toIso8601String(),
+    );
   }
 }
 ```

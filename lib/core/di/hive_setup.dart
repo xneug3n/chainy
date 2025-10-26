@@ -19,6 +19,18 @@ class HiveSetup {
     _initialized = true;
   }
 
+  /// Initialize Hive for testing (without Flutter dependencies)
+  static Future<void> initializeForTesting() async {
+    if (_initialized) return;
+    
+    // Register adapters - using the generated adapter from habit_dto.dart
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(HabitDtoAdapter());
+    }
+    
+    _initialized = true;
+  }
+
   /// Check if Hive is initialized
   static bool get isInitialized => _initialized;
 

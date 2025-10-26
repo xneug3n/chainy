@@ -4,6 +4,8 @@ globs: .cursor/rules/*.mdc
 alwaysApply: true
 ---
 
+## **Rule Structure & Format**
+
 - **Required Rule Structure:**
   ```markdown
   ---
@@ -19,35 +21,66 @@ alwaysApply: true
 
 - **File References:**
   - Use `[filename](mdc:path/to/file)` ([filename](mdc:filename)) to reference files
-  - Example: [prisma.mdc](mdc:.cursor/rules/prisma.mdc) for rule references
-  - Example: [schema.prisma](mdc:prisma/schema.prisma) for code references
+  - Example: [flutter.mdc](mdc:.cursor/rules/flutter.mdc) for rule references
+  - Example: [main.dart](mdc:lib/main.dart) for code references
+
+## **Rule Size & Organization**
+
+- **Size Limits:**
+  - **CRITICAL:** Keep rules under 500 lines
+  - Split large rules into focused, combinable sub-rules
+  - Use cross-references between related rules
+
+- **Rule Splitting Strategy:**
+  - Split by domain (e.g., `flutter_architecture.mdc`, `flutter_testing.mdc`)
+  - Split by scope (e.g., `dart_language.mdc`, `flutter_widgets.mdc`)
+  - Reference related rules: "See: [flutter.mdc](mdc:.cursor/rules/flutter.mdc) for widget patterns"
+
+## **Content Quality Standards**
+
+- **Concrete Examples Required:**
+  - Reference actual project files: [habit_card.dart](mdc:lib/features/habits/presentation/widgets/quantitative_habit_card.dart)
+  - Show real code patterns from the codebase
+  - Avoid theoretical examples
+
+- **Internal Documentation Style:**
+  - Write rules as clear internal documentation
+  - Include specific implementation details
+  - Reference existing patterns in the project
+
+## **Code Examples & References**
 
 - **Code Examples:**
-  - Use language-specific code blocks
-  ```typescript
-  // ✅ DO: Show good examples
-  const goodExample = true;
-  
-  // ❌ DON'T: Show anti-patterns
-  const badExample = false;
+  ```dart
+  // ✅ DO: Show good examples from actual codebase
+  class HabitCard extends StatelessWidget {
+    const HabitCard({super.key, required this.habit});
+    final Habit habit;
+  }
   ```
 
-- **Rule Content Guidelines:**
-  - Start with high-level overview
-  - Include specific, actionable requirements
-  - Show examples of correct implementation
-  - Reference existing code when possible
-  - Keep rules DRY by referencing other rules
+- **Project-Specific References:**
+  - Reference [habit_repository.dart](mdc:lib/features/habits/data/habit_repository.dart) for data patterns
+  - Reference [app_router.dart](mdc:lib/core/routes/app_router.dart) for navigation
+  - Reference [test_helpers](mdc:test/helpers/) for testing patterns
 
-- **Rule Maintenance:**
+## **Rule Reuse & Maintenance**
+
+- **Reuse Strategy:**
+  - When prompts repeat in chat, reference existing rules
   - Update rules when new patterns emerge
-  - Add examples from actual codebase
-  - Remove outdated patterns
-  - Cross-reference related rules
+  - Cross-reference between rules to avoid duplication
 
-- **Best Practices:**
-  - Use bullet points for clarity
-  - Keep descriptions concise
-  - Include both DO and DON'T examples
-  - Reference actual code over theoretical examples
-  - Use consistent formatting across rules 
+- **Maintenance Protocol:**
+  - Add examples from actual codebase changes
+  - Remove outdated patterns
+  - Update references when files move/rename
+  - Keep rules synchronized with code evolution
+
+## **Quality Gates**
+
+- **Rule Validation:**
+  - Each rule must reference at least 2 actual project files
+  - Rules must include positive examples from actual codebase
+  - Rules must be under 500 lines
+  - Rules must cross-reference related rules when applicable 
