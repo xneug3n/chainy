@@ -54,7 +54,7 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -62,7 +62,7 @@
             "description": "Create the Habit class with all required fields and implement the RecurrenceConfig class to handle different recurrence patterns.",
             "dependencies": [],
             "details": "Implement the Habit class with all required fields including id, name, icon, color, goalType, targetValue, unit, recurrenceType, recurrenceConfig, note, createdAt, and updatedAt. Create the RecurrenceConfig class to handle different recurrence patterns (daily, multiple per day, weekly, custom) with appropriate properties and methods. Implement JSON serialization and deserialization methods for both classes to support data persistence.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for Habit and RecurrenceConfig classes, including serialization/deserialization tests, validation tests for different field combinations, and tests for various recurrence pattern configurations."
           },
           {
@@ -73,7 +73,7 @@
               1
             ],
             "details": "Research and compare Hive, SQLite, and shared_preferences to determine the most suitable storage solution for the habit tracking app. Set up the selected database infrastructure, including necessary dependencies, initialization code, and database schema. Create database adapters or helpers to facilitate data operations. Implement data migration strategies for future updates.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create unit tests for database initialization and configuration. Write integration tests to verify database connection and basic operations. Test database performance with large datasets and test data migration scenarios."
           },
           {
@@ -85,7 +85,7 @@
               2
             ],
             "details": "Develop the HabitRepository class with methods for getAllHabits(), getHabitById(), saveHabit(), and deleteHabit(). Implement proper error handling and logging for database operations. Ensure thread safety for concurrent operations. Add methods for querying habits based on specific criteria (e.g., by recurrence type, by creation date). Implement caching strategies if appropriate to improve performance.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Write unit tests for each CRUD operation in the HabitRepository. Create integration tests that verify the repository correctly interacts with the database. Test edge cases such as concurrent operations, invalid inputs, and database errors. Verify that queries return the expected results for different filtering criteria."
           }
         ]
@@ -545,7 +545,7 @@
     ],
     "metadata": {
       "created": "2025-10-25T21:56:43.523Z",
-      "updated": "2025-10-25T22:31:02.436Z",
+      "updated": "2025-10-26T00:35:26.005Z",
       "description": "Tasks for master context"
     }
   }
