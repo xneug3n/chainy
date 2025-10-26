@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'widgets/habit_list_view.dart';
 
 /// Home screen with habit tracking overview
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chainy'),
@@ -18,34 +20,18 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.psychology,
-              size: 64,
-              color: Colors.grey,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Welcome to Chainy',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Start building your habits today',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
+      body: const HabitListView(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddHabitDialog(context),
+        child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  void _showAddHabitDialog(BuildContext context) {
+    // TODO: Show add habit dialog or navigate to habit form
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Add habit functionality coming soon!')),
     );
   }
 }
