@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/habits/presentation/controllers/habit_controller.dart';
+import '../../features/habits/presentation/controllers/habit_filter_controller.dart';
 import 'habit_row.dart';
 import 'add_new_habit_row.dart';
+import 'habit_filter_controls.dart';
 
 /// ListView widget for displaying habits
 class HabitListView extends ConsumerWidget {
@@ -10,56 +11,63 @@ class HabitListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final habitsAsync = ref.watch(habitControllerProvider);
+    final habitsAsync = ref.watch(filteredHabitsProvider);
 
-    return habitsAsync.when(
-      data: (habits) {
-        if (habits.isEmpty) {
-          return const _EmptyHabitsView();
-        }
-        
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: habits.length + 1, // +1 for Add New row
-          itemBuilder: (context, index) {
-            if (index == habits.length) {
-              return const AddNewHabitRow();
-            }
-            return HabitRow(habit: habits[index]);
-          },
-        );
-      },
-      loading: () => const Center(
-        child: CircularProgressIndicator(),
-      ),
-      error: (error, stackTrace) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red,
+    return Column(
+      children: [
+        const HabitFilterControls(),
+        Expanded(
+          child: habitsAsync.when(
+            data: (habits) {
+              if (habits.isEmpty) {
+                return const _EmptyHabitsView();
+              }
+              
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: habits.length + 1, // +1 for Add New row
+                itemBuilder: (context, index) {
+                  if (index == habits.length) {
+                    return const AddNewHabitRow();
+                  }
+                  return HabitRow(habit: habits[index]);
+                },
+              );
+            },
+            loading: () => const Center(
+              child: CircularProgressIndicator(),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Error loading habits',
-              style: Theme.of(context).textTheme.headlineSmall,
+            error: (error, stackTrace) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading habits',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => ref.invalidate(filteredHabitsProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => ref.invalidate(habitControllerProvider),
-              child: const Text('Retry'),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

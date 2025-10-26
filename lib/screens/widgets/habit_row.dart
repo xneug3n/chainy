@@ -7,9 +7,10 @@ import '../../features/habits/domain/services/streak_service.dart';
 import 'segmented_timeline.dart';
 import 'week_strip_indicator.dart';
 import 'streak_indicator.dart';
+import 'confetti_animation.dart';
 
 /// Row widget for displaying a single habit
-class HabitRow extends ConsumerWidget {
+class HabitRow extends ConsumerStatefulWidget {
   final Habit habit;
   
   const HabitRow({
@@ -18,71 +19,90 @@ class HabitRow extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Dismissible(
-        key: Key(habit.id),
-        background: _SwipeRightBackground(),
-        secondaryBackground: _SwipeLeftBackground(),
-        onDismissed: (direction) {
-          if (direction == DismissDirection.startToEnd) {
-            _handleSwipeRight(context);
-          } else {
-            _handleSwipeLeft(context);
-          }
-        },
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: habit.color.withOpacity(0.1),
-            child: Text(
-              habit.icon,
-              style: const TextStyle(fontSize: 20),
-            ),
-          ),
-          title: Text(
-            habit.name,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              FutureBuilder<int>(
-                future: ref.read(progressServiceProvider.notifier).getCurrentValue(habit.id),
-                builder: (context, snapshot) {
-                  final currentValue = snapshot.data ?? 0;
-                  return SegmentedTimeline(
-                    habit: habit,
-                    currentValue: currentValue,
-                    onSegmentTap: (newValue) => _handleSegmentTap(context, ref, newValue),
-                  );
-                },
+  ConsumerState<HabitRow> createState() => _HabitRowState();
+}
+
+class _HabitRowState extends ConsumerState<HabitRow> {
+  int? _previousStreak;
+  bool _showCompletionAnimation = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return StreakCelebration(
+      currentStreak: _getCurrentStreak(),
+      previousStreak: _previousStreak,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: Dismissible(
+          key: Key(widget.habit.id),
+          background: _SwipeRightBackground(),
+          secondaryBackground: _SwipeLeftBackground(),
+          onDismissed: (direction) {
+            if (direction == DismissDirection.startToEnd) {
+              _handleSwipeRight(context);
+            } else {
+              _handleSwipeLeft(context);
+            }
+          },
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: widget.habit.color.withOpacity(0.1),
+              child: Text(
+                widget.habit.icon,
+                style: const TextStyle(fontSize: 20),
               ),
-              const SizedBox(height: 4),
-              WeekStripIndicator(habitId: habit.id),
-            ],
+            ),
+            title: Text(
+              widget.habit.name,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                FutureBuilder<int>(
+                  future: ref.read(progressServiceProvider.notifier).getCurrentValue(widget.habit.id),
+                  builder: (context, snapshot) {
+                    final currentValue = snapshot.data ?? 0;
+                    return SegmentedTimeline(
+                      habit: widget.habit,
+                      currentValue: currentValue,
+                      onSegmentTap: (newValue) => _handleSegmentTap(context, ref, newValue),
+                    );
+                  },
+                ),
+                const SizedBox(height: 4),
+                WeekStripIndicator(habitId: widget.habit.id),
+              ],
+            ),
+            trailing: FutureBuilder<int>(
+              future: ref.read(streakServiceProvider.notifier).getCurrentStreak(widget.habit.id),
+              builder: (context, snapshot) {
+                final streak = snapshot.data ?? 0;
+                return StreakIndicator(streak: streak);
+              },
+            ),
+            onTap: () => _showHabitDetails(context),
           ),
-          trailing: FutureBuilder<int>(
-            future: ref.read(streakServiceProvider.notifier).getCurrentStreak(habit.id),
-            builder: (context, snapshot) {
-              final streak = snapshot.data ?? 0;
-              return StreakIndicator(streak: streak);
-            },
-          ),
-          onTap: () => _showHabitDetails(context),
         ),
       ),
     );
   }
 
+  int _getCurrentStreak() {
+    // This would normally get the current streak from the service
+    // For now, return a placeholder value
+    return 0;
+  }
+
   void _handleSwipeRight(BuildContext context) {
     // Complete/increment habit
     HapticFeedback.lightImpact();
+    _triggerCompletionAnimation();
     // TODO: Implement habit completion logic
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Completed ${habit.name}!'),
+        content: Text('Completed ${widget.habit.name}!'),
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () {
@@ -112,9 +132,10 @@ class HabitRow extends ConsumerWidget {
   void _handleSegmentTap(BuildContext context, WidgetRef ref, int newValue) {
     // TODO: Implement segment tap logic to update check-ins
     HapticFeedback.lightImpact();
+    _triggerCompletionAnimation();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Updated ${habit.name} to $newValue'),
+        content: Text('Updated ${widget.habit.name} to $newValue'),
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () {
@@ -123,6 +144,21 @@ class HabitRow extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _triggerCompletionAnimation() {
+    setState(() {
+      _showCompletionAnimation = true;
+    });
+    
+    // Reset animation after delay
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) {
+        setState(() {
+          _showCompletionAnimation = false;
+        });
+      }
+    });
   }
 
 }
