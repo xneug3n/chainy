@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../lib/screens/widgets/habit_row.dart';
 import '../../../lib/features/habits/domain/models/habit.dart';
 import '../../../lib/features/habits/domain/models/recurrence_config.dart';
@@ -24,9 +25,11 @@ void main() {
 
     testWidgets('displays habit information correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HabitRow(habit: testHabit),
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: HabitRow(habit: testHabit),
+            ),
           ),
         ),
       );
@@ -39,9 +42,11 @@ void main() {
 
     testWidgets('shows swipe backgrounds correctly', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HabitRow(habit: testHabit),
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: HabitRow(habit: testHabit),
+            ),
           ),
         ),
       );
@@ -56,9 +61,11 @@ void main() {
 
     testWidgets('handles tap on habit row', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HabitRow(habit: testHabit),
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: HabitRow(habit: testHabit),
+            ),
           ),
         ),
       );
@@ -72,9 +79,11 @@ void main() {
 
     testWidgets('handles right swipe gesture', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HabitRow(habit: testHabit),
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: HabitRow(habit: testHabit),
+            ),
           ),
         ),
       );
@@ -88,9 +97,11 @@ void main() {
 
     testWidgets('handles left swipe gesture', (WidgetTester tester) async {
       await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: HabitRow(habit: testHabit),
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: HabitRow(habit: testHabit),
+            ),
           ),
         ),
       );

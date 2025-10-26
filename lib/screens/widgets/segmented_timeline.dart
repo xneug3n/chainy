@@ -6,11 +6,13 @@ import '../../features/habits/domain/models/habit.dart';
 class SegmentedTimeline extends StatefulWidget {
   final Habit habit;
   final int currentValue;
+  final Function(int)? onSegmentTap;
   
   const SegmentedTimeline({
     super.key,
     required this.habit,
     required this.currentValue,
+    this.onSegmentTap,
   });
 
   @override
@@ -116,16 +118,16 @@ class _SegmentedTimelineState extends State<SegmentedTimeline>
   }
 
   void _updateSegment(int index) {
-    // TODO: Implement segment update logic
-    // This should update the current value and trigger animations
     HapticFeedback.lightImpact();
     
     if (index < widget.currentValue) {
       // Segment is already active, deactivate it
       _animationController.reverse();
+      widget.onSegmentTap?.call(index);
     } else {
       // Activate segment
       _animationController.forward();
+      widget.onSegmentTap?.call(index + 1);
     }
   }
 }

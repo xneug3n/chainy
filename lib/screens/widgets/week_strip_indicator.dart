@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/habits/domain/services/progress_service.dart';
 
 /// Compact week strip indicator (Mo-Su) for habit tracking
-class WeekStripIndicator extends StatelessWidget {
+class WeekStripIndicator extends ConsumerWidget {
   final String habitId;
   
   const WeekStripIndicator({
@@ -10,20 +12,26 @@ class WeekStripIndicator extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: _buildWeekDays(context),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<List<bool>>(
+      future: _getWeekCompletionStatus(ref),
+      builder: (context, snapshot) {
+        final weekStatus = snapshot.data ?? List.filled(7, false);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: _buildWeekDays(context, weekStatus),
+        );
+      },
     );
   }
 
-  List<Widget> _buildWeekDays(BuildContext context) {
+  List<Widget> _buildWeekDays(BuildContext context, List<bool> weekStatus) {
     const weekDays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
     
     return weekDays.asMap().entries.map((entry) {
       final index = entry.key;
       final day = entry.value;
-      final isCompleted = _isDayCompleted(index); // TODO: Get from check-ins
+      final isCompleted = weekStatus[index];
       
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 1),
@@ -57,9 +65,10 @@ class WeekStripIndicator extends StatelessWidget {
     }).toList();
   }
 
-  bool _isDayCompleted(int dayIndex) {
-    // TODO: Implement logic to check if habit was completed on this day
-    // This should check against check-ins for the current week
-    return false;
+  Future<List<bool>> _getWeekCompletionStatus(WidgetRef ref) async {
+    final today = DateTime.now();
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    return await ref.read(progressServiceProvider.notifier)
+        .getWeekCompletionStatus(habitId, weekStart);
   }
 }

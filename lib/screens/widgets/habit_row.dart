@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/habits/domain/models/habit.dart';
+import '../../features/habits/domain/services/progress_service.dart';
+import '../../features/habits/domain/services/streak_service.dart';
 import 'segmented_timeline.dart';
 import 'week_strip_indicator.dart';
 import 'streak_indicator.dart';
 
 /// Row widget for displaying a single habit
-class HabitRow extends StatelessWidget {
+class HabitRow extends ConsumerWidget {
   final Habit habit;
   
   const HabitRow({
@@ -15,7 +18,7 @@ class HabitRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Dismissible(
@@ -45,16 +48,27 @@ class HabitRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              SegmentedTimeline(
-                habit: habit,
-                currentValue: _getCurrentValue(), // TODO: Get from check-ins
+              FutureBuilder<int>(
+                future: ref.read(progressServiceProvider.notifier).getCurrentValue(habit.id),
+                builder: (context, snapshot) {
+                  final currentValue = snapshot.data ?? 0;
+                  return SegmentedTimeline(
+                    habit: habit,
+                    currentValue: currentValue,
+                    onSegmentTap: (newValue) => _handleSegmentTap(context, ref, newValue),
+                  );
+                },
               ),
               const SizedBox(height: 4),
               WeekStripIndicator(habitId: habit.id),
             ],
           ),
-          trailing: StreakIndicator(
-            streak: _getCurrentStreak(), // TODO: Get from check-ins
+          trailing: FutureBuilder<int>(
+            future: ref.read(streakServiceProvider.notifier).getCurrentStreak(habit.id),
+            builder: (context, snapshot) {
+              final streak = snapshot.data ?? 0;
+              return StreakIndicator(streak: streak);
+            },
           ),
           onTap: () => _showHabitDetails(context),
         ),
@@ -95,15 +109,22 @@ class HabitRow extends StatelessWidget {
     );
   }
 
-  int _getCurrentValue() {
-    // TODO: Get current value from check-ins for today
-    return 0;
+  void _handleSegmentTap(BuildContext context, WidgetRef ref, int newValue) {
+    // TODO: Implement segment tap logic to update check-ins
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Updated ${habit.name} to $newValue'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            // TODO: Implement undo logic
+          },
+        ),
+      ),
+    );
   }
 
-  int _getCurrentStreak() {
-    // TODO: Calculate current streak from check-ins
-    return 0;
-  }
 }
 
 /// Background widget for right swipe (complete/increment)

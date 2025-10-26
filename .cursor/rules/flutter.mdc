@@ -28,6 +28,11 @@ Establish consistent Flutter and Dart development standards for performance opti
   - Prefer immutability with const constructors
   - Encapsulate data in composite types instead of primitives
   - Use classes with internal validation for data integrity
+- **Initialization Safety:**
+  - **CRITICAL:** Avoid `late` fields in classes with public methods to prevent race conditions
+  - Prefer nullable types with explicit initialization checks over `late` fields
+  - Always verify dependencies are initialized before use in public methods
+  - Provide descriptive error messages for initialization failures
 
 ### **Flutter Architecture**
 - **Widget Structure:**
@@ -74,6 +79,30 @@ class UserCard extends StatelessWidget {
 bool isValidEmail(String email) {
   if (email.isEmpty) return false;
   return email.contains('@');
+}
+
+// Good: Safe initialization pattern
+class Repository {
+  Box<Data>? _box;
+  
+  Future<void> _ensureInitialized() async {
+    if (_box != null) return;
+    _box = await Hive.openBox<Data>('data');
+  }
+  
+  Future<List<Data>> getAllData() async {
+    await _ensureInitialized();
+    return _box!.values.toList();
+  }
+}
+
+// Bad: Late field race condition
+class Repository {
+  late Box<Data> _box; // Can cause LateInitializationError
+  
+  Future<List<Data>> getAllData() async {
+    return _box.values.toList(); // May fail
+  }
 }
 ```
 
