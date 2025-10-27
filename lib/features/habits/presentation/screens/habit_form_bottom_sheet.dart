@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../domain/models/habit.dart';
+import '../../domain/models/recurrence_config.dart';
 import '../../../../core/ui/chainy_button.dart';
 import '../../../../core/ui/chainy_text_field.dart';
 import '../../../../core/theme/chainy_colors.dart';
 import '../widgets/icon_selector_widget.dart';
 import '../widgets/color_picker_widget.dart';
+import '../widgets/goal_type_selector_widget.dart';
+import '../widgets/target_value_widget.dart';
+import '../widgets/recurrence_selector_widget.dart';
 
 /// iOS-style bottom sheet for creating and editing habits
 class HabitFormBottomSheet extends StatefulWidget {
@@ -27,6 +31,11 @@ class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
   
   String _selectedIcon = '📝';
   Color _selectedColor = ChainyColors.lightAccentBlue;
+  GoalType _goalType = GoalType.binary;
+  int _targetValue = 1;
+  String _unit = 'times';
+  RecurrenceType _recurrenceType = RecurrenceType.daily;
+  late RecurrenceConfig _recurrenceConfig;
   String? _nameError;
   
   @override
@@ -49,10 +58,16 @@ class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
       _noteController = TextEditingController(text: widget.habit!.note ?? '');
       _selectedIcon = widget.habit!.icon;
       _selectedColor = widget.habit!.color;
+      _goalType = widget.habit!.goalType;
+      _targetValue = widget.habit!.targetValue;
+      _unit = widget.habit!.unit ?? 'times';
+      _recurrenceType = widget.habit!.recurrenceType;
+      _recurrenceConfig = widget.habit!.recurrenceConfig;
     } else {
       // Initialize with default values
       _nameController = TextEditingController();
       _noteController = TextEditingController();
+      _recurrenceConfig = const RecurrenceConfig.daily();
     }
   }
   
@@ -148,6 +163,35 @@ class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
                   ColorPickerWidget(
                     selectedColor: _selectedColor,
                     onColorSelected: (color) => setState(() => _selectedColor = color),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Goal type selector
+                  GoalTypeSelectorWidget(
+                    goalType: _goalType,
+                    onGoalTypeChanged: (type) => setState(() => _goalType = type),
+                  ),
+                  
+                  // Target value and unit (for quantitative goals)
+                  if (_goalType == GoalType.quantitative) ...[
+                    const SizedBox(height: 24),
+                    TargetValueWidget(
+                      targetValue: _targetValue,
+                      unit: _unit,
+                      onTargetValueChanged: (value) => setState(() => _targetValue = value),
+                      onUnitChanged: (value) => setState(() => _unit = value),
+                    ),
+                  ],
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Recurrence selector
+                  RecurrenceSelectorWidget(
+                    recurrenceType: _recurrenceType,
+                    recurrenceConfig: _recurrenceConfig,
+                    onRecurrenceTypeChanged: (type) => setState(() => _recurrenceType = type),
+                    onRecurrenceConfigChanged: (config) => setState(() => _recurrenceConfig = config),
                   ),
                   
                   const SizedBox(height: 24),
