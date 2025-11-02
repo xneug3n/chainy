@@ -1,5 +1,6 @@
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../features/habits/data/models/habit_dto.dart';
+import '../../features/habits/data/adapters/habit_dto_adapter.dart';
+import '../../features/habits/data/adapters/check_in_dto_adapter.dart';
 
 /// Initialize Hive database with all required adapters
 class HiveSetup {
@@ -11,9 +12,12 @@ class HiveSetup {
     
     await Hive.initFlutter();
     
-    // Register adapters - using the generated adapter from habit_dto.dart
+    // Register adapters - using the generated adapters
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(HabitDtoAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(CheckInDtoAdapter());
     }
     
     _initialized = true;
@@ -23,9 +27,12 @@ class HiveSetup {
   static Future<void> initializeForTesting() async {
     if (_initialized) return;
     
-    // Register adapters - using the generated adapter from habit_dto.dart
+    // Register adapters - using the generated adapters
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(HabitDtoAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(CheckInDtoAdapter());
     }
     
     _initialized = true;

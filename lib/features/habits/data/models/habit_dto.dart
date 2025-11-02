@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive/hive.dart';
 import '../../domain/models/habit.dart';
 import '../../domain/models/recurrence_config.dart';
+import '../../../../core/utils/app_logger.dart';
 
 part 'habit_dto.freezed.dart';
 part 'habit_dto.g.dart';
@@ -50,19 +51,128 @@ class HabitDto with _$HabitDto {
 /// Extension to convert DTO to domain model
 extension HabitDtoExtension on HabitDto {
   Habit toDomain() {
-    return Habit(
-      id: id,
-      name: name,
-      icon: icon,
-      color: Color(colorValue),
-      goalType: GoalType.values.firstWhere((e) => e.name == goalType),
-      targetValue: targetValue,
-      unit: unit,
-      recurrenceType: RecurrenceType.values.firstWhere((e) => e.name == recurrenceType),
-      recurrenceConfig: RecurrenceConfig.fromJson(recurrenceConfig),
-      note: note,
-      createdAt: DateTime.parse(createdAt),
-      updatedAt: DateTime.parse(updatedAt),
-    );
+    AppLogger.functionEntry('HabitDto.toDomain', 
+      params: {'habitId': id, 'name': name}, 
+      tag: 'HabitDto');
+    
+    try {
+      // Safely deserialize RecurrenceConfig with fallback
+      RecurrenceConfig config;
+      try {
+        AppLogger.debug('Deserializing RecurrenceConfig', 
+          data: {'recurrenceConfig': recurrenceConfig}, 
+          tag: 'HabitDto');
+        
+        if (recurrenceConfig.isEmpty || !recurrenceConfig.containsKey('runtimeType')) {
+          AppLogger.warning('Invalid or empty RecurrenceConfig, using default', 
+            data: {'recurrenceType': recurrenceType, 'recurrenceConfig': recurrenceConfig}, 
+            tag: 'HabitDto');
+          
+          // No valid config found, create default based on recurrence type
+          final type = RecurrenceType.values.firstWhere(
+            (e) => e.name == recurrenceType,
+            orElse: () => RecurrenceType.daily,
+          );
+          config = _createDefaultRecurrenceConfig(type);
+        } else {
+          config = RecurrenceConfig.fromJson(recurrenceConfig);
+          AppLogger.debug('RecurrenceConfig deserialized successfully', tag: 'HabitDto');
+        }
+      } catch (e, stack) {
+        AppLogger.error('Failed to deserialize RecurrenceConfig, using default', 
+          error: e, 
+          stackTrace: stack, 
+          tag: 'HabitDto',
+          context: {
+            'habitId': id,
+            'recurrenceType': recurrenceType,
+            'recurrenceConfig': recurrenceConfig.toString(),
+          });
+        
+        // Fallback to default config if deserialization fails
+        final type = RecurrenceType.values.firstWhere(
+          (e) => e.name == recurrenceType,
+          orElse: () => RecurrenceType.daily,
+        );
+        config = _createDefaultRecurrenceConfig(type);
+      }
+
+      // Safely parse dates with fallback
+      DateTime createdAtDate;
+      try {
+        AppLogger.debug('Parsing createdAt', data: {'createdAt': createdAt}, tag: 'HabitDto');
+        createdAtDate = DateTime.parse(createdAt);
+      } catch (e, stack) {
+        AppLogger.error('Failed to parse createdAt, using current date', 
+          error: e, 
+          stackTrace: stack, 
+          tag: 'HabitDto',
+          context: {'habitId': id, 'createdAt': createdAt});
+        createdAtDate = DateTime.now();
+      }
+
+      DateTime updatedAtDate;
+      try {
+        AppLogger.debug('Parsing updatedAt', data: {'updatedAt': updatedAt}, tag: 'HabitDto');
+        updatedAtDate = DateTime.parse(updatedAt);
+      } catch (e, stack) {
+        AppLogger.error('Failed to parse updatedAt, using createdAt or current date', 
+          error: e, 
+          stackTrace: stack, 
+          tag: 'HabitDto',
+          context: {'habitId': id, 'updatedAt': updatedAt});
+        updatedAtDate = createdAtDate;
+      }
+
+      final habit = Habit(
+        id: id,
+        name: name,
+        icon: icon,
+        color: Color(colorValue),
+        goalType: GoalType.values.firstWhere((e) => e.name == goalType),
+        targetValue: targetValue,
+        unit: unit,
+        recurrenceType: RecurrenceType.values.firstWhere((e) => e.name == recurrenceType),
+        recurrenceConfig: config,
+        note: note,
+        createdAt: createdAtDate,
+        updatedAt: updatedAtDate,
+      );
+      
+      AppLogger.functionExit('HabitDto.toDomain', 
+        result: {'habitId': habit.id, 'name': habit.name}, 
+        tag: 'HabitDto');
+      
+      return habit;
+    } catch (e, stack) {
+      AppLogger.error('Failed to convert HabitDto to domain model', 
+        error: e, 
+        stackTrace: stack, 
+        tag: 'HabitDto',
+        context: {
+          'habitId': id,
+          'name': name,
+          'createdAt': createdAt,
+          'updatedAt': updatedAt,
+          'recurrenceConfig': recurrenceConfig.toString(),
+        });
+      rethrow;
+    }
+  }
+
+  /// Create a default RecurrenceConfig based on the recurrence type
+  RecurrenceConfig _createDefaultRecurrenceConfig(RecurrenceType type) {
+    switch (type) {
+      case RecurrenceType.daily:
+        return const RecurrenceConfig.daily();
+      case RecurrenceType.multiplePerDay:
+        return const RecurrenceConfig.multiplePerDay(targetCount: 2);
+      case RecurrenceType.weekly:
+        return const RecurrenceConfig.weekly(
+          daysOfWeek: [Weekday.monday],
+        );
+      case RecurrenceType.custom:
+        return const RecurrenceConfig.custom(interval: 1);
+    }
   }
 }

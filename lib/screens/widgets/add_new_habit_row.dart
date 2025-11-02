@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:chainy/features/habits/presentation/screens/habit_form_bottom_sheet.dart';
 
 /// Row widget for adding a new habit
 class AddNewHabitRow extends StatelessWidget {
@@ -35,9 +36,6 @@ class AddNewHabitRow extends StatelessWidget {
   }
 
   void _showAddHabitDialog(BuildContext context) {
-    // TODO: Show add habit dialog or navigate to habit form
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add habit functionality coming soon!')),
-    );
+    showHabitFormBottomSheet(context);
   }
 }

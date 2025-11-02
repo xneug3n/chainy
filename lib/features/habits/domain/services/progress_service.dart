@@ -114,7 +114,17 @@ class ProgressService extends _$ProgressService {
       case GoalType.binary:
         return checkIn.value >= 1;
       case GoalType.quantitative:
-        return checkIn.value >= habit.targetValue;
+        // For multiplePerDay: total target is targetValue * targetCount
+        if (habit.recurrenceType == RecurrenceType.multiplePerDay) {
+          final targetCount = habit.recurrenceConfig.maybeWhen(
+            multiplePerDay: (count) => count,
+            orElse: () => 1,
+          );
+          final totalTarget = habit.targetValue * targetCount;
+          return checkIn.value >= totalTarget;
+        } else {
+          return checkIn.value >= habit.targetValue;
+        }
     }
   }
 

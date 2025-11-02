@@ -1,3 +1,9 @@
+---
+description: Root Cause Analysis and Remediation Protocol for systematic bug diagnosis and durable fixes
+globs: **/*
+alwaysApply: false
+---
+
 ## **Mission Briefing: Root Cause Analysis & Remediation Protocol**
 
 Previous, simpler attempts to resolve this issue have failed. Standard procedures are now suspended. You will initiate a **deep diagnostic protocol.**

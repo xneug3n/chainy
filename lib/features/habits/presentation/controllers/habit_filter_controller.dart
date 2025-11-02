@@ -61,17 +61,14 @@ class HabitFilterController extends _$HabitFilterController {
 /// Provider for filtered and sorted habits
 @riverpod
 Future<List<Habit>> filteredHabits(FilteredHabitsRef ref) async {
-  final habitsAsync = ref.watch(habitControllerProvider);
+  // Watch the controller provider - this will automatically react to changes
+  // Using .future ensures we wait for the data to be available
+  final habits = await ref.watch(habitControllerProvider.future);
   final filter = ref.watch(habitFilterControllerProvider);
 
-  return habitsAsync.when(
-    data: (habits) {
-      final filtered = habits.applyFilter(filter);
-      return filtered.applySort(filter);
-    },
-    loading: () => <Habit>[],
-    error: (_, __) => <Habit>[],
-  );
+  // Apply filter and sort
+  final filtered = habits.applyFilter(filter);
+  return filtered.applySort(filter);
 }
 
 /// Provider for getting filter options

@@ -9,32 +9,49 @@ part 'check_in_repository.g.dart';
 @riverpod
 class CheckInRepository extends _$CheckInRepository {
   static const String _boxName = 'check_ins';
-  late Box<CheckInDto> _box;
+  Box<CheckInDto>? _box;
 
   @override
   Future<List<CheckIn>> build() async {
-    _box = await Hive.openBox<CheckInDto>(_boxName);
+    await _ensureBoxInitialized();
     return _getAllCheckIns();
+  }
+
+  /// Ensure the Hive box is initialized
+  Future<void> _ensureBoxInitialized() async {
+    if (_box != null) return;
+    
+    if (Hive.isBoxOpen(_boxName)) {
+      _box = Hive.box<CheckInDto>(_boxName);
+    } else {
+      _box = await Hive.openBox<CheckInDto>(_boxName);
+    }
   }
 
   /// Get all check-ins
   List<CheckIn> _getAllCheckIns() {
-    return _box.values.map((dto) => dto.toDomain()).toList();
+    if (_box == null) {
+      throw StateError('Hive box not initialized. Call _ensureBoxInitialized() first.');
+    }
+    return _box!.values.map((dto) => dto.toDomain()).toList();
   }
 
   /// Get all check-ins as async
   Future<List<CheckIn>> getAllCheckIns() async {
+    await _ensureBoxInitialized();
     return _getAllCheckIns();
   }
 
   /// Get a specific check-in by ID
   Future<CheckIn?> getCheckInById(String id) async {
-    final dto = _box.get(id);
+    await _ensureBoxInitialized();
+    final dto = _box!.get(id);
     return dto?.toDomain();
   }
 
   /// Get check-ins for a specific habit
   Future<List<CheckIn>> getCheckInsForHabit(String habitId) async {
+    await _ensureBoxInitialized();
     final allCheckIns = _getAllCheckIns();
     return allCheckIns
         .where((checkIn) => checkIn.habitId == habitId)
@@ -58,26 +75,30 @@ class CheckInRepository extends _$CheckInRepository {
 
   /// Save a check-in (create or update)
   Future<void> addCheckIn(CheckIn checkIn) async {
+    await _ensureBoxInitialized();
     final dto = CheckInDto.fromDomain(checkIn);
-    await _box.put(checkIn.id, dto);
+    await _box!.put(checkIn.id, dto);
     ref.invalidateSelf();
   }
 
   /// Update a check-in
   Future<void> updateCheckIn(CheckIn checkIn) async {
+    await _ensureBoxInitialized();
     final dto = CheckInDto.fromDomain(checkIn);
-    await _box.put(checkIn.id, dto);
+    await _box!.put(checkIn.id, dto);
     ref.invalidateSelf();
   }
 
   /// Delete a check-in
   Future<void> deleteCheckIn(String id) async {
-    await _box.delete(id);
+    await _ensureBoxInitialized();
+    await _box!.delete(id);
     ref.invalidateSelf();
   }
 
   /// Get check-ins for a specific date
   Future<List<CheckIn>> getCheckInsForDate(DateTime date) async {
+    await _ensureBoxInitialized();
     final allCheckIns = _getAllCheckIns();
     final targetDate = DateTime(date.year, date.month, date.day);
     
@@ -113,7 +134,8 @@ class CheckInRepository extends _$CheckInRepository {
 
   /// Get check-ins count
   Future<int> getCheckInsCount() async {
-    return _box.length;
+    await _ensureBoxInitialized();
+    return _box!.length;
   }
 
   /// Get check-ins count for a specific habit
@@ -124,7 +146,8 @@ class CheckInRepository extends _$CheckInRepository {
 
   /// Clear all check-ins (for testing)
   Future<void> clearAllCheckIns() async {
-    await _box.clear();
+    await _ensureBoxInitialized();
+    await _box!.clear();
     ref.invalidateSelf();
   }
 }

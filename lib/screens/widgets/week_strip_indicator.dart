@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/habits/domain/services/progress_service.dart';
+import '../../features/habits/presentation/controllers/check_in_controller.dart';
 
 /// Compact week strip indicator (Mo-Su) for habit tracking
 class WeekStripIndicator extends ConsumerWidget {
@@ -13,15 +13,19 @@ class WeekStripIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<List<bool>>(
-      future: _getWeekCompletionStatus(ref),
-      builder: (context, snapshot) {
-        final weekStatus = snapshot.data ?? List.filled(7, false);
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: _buildWeekDays(context, weekStatus),
-        );
-      },
+    return ref.watch(weekCompletionStatusProvider(habitId)).when(
+      data: (weekStatus) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: _buildWeekDays(context, weekStatus),
+      ),
+      loading: () => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: _buildWeekDays(context, List.filled(7, false)),
+      ),
+      error: (_, __) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: _buildWeekDays(context, List.filled(7, false)),
+      ),
     );
   }
 
@@ -45,7 +49,7 @@ class WeekStripIndicator extends ConsumerWidget {
           border: Border.all(
             color: isCompleted 
                 ? Theme.of(context).primaryColor
-                : Colors.grey.withOpacity(0.3),
+                : Colors.grey.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -63,12 +67,5 @@ class WeekStripIndicator extends ConsumerWidget {
         ),
       );
     }).toList();
-  }
-
-  Future<List<bool>> _getWeekCompletionStatus(WidgetRef ref) async {
-    final today = DateTime.now();
-    final weekStart = today.subtract(Duration(days: today.weekday - 1));
-    return await ref.read(progressServiceProvider.notifier)
-        .getWeekCompletionStatus(habitId, weekStart);
   }
 }

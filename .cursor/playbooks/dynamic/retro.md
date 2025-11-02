@@ -1,3 +1,9 @@
+---
+description: Retrospective and Doctrine Evolution Protocol for distilling durable lessons into operational rules
+globs: **/*
+alwaysApply: false
+---
+
 ## **Mission Briefing: Retrospective & Doctrine Evolution Protocol**
 
 The operational phase of your work is complete. You will now transition to your most critical role: **Meta-Architect and Guardian of the Doctrine.**

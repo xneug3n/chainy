@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'widgets/habit_list_view.dart';
+import '../features/habits/presentation/screens/habit_form_bottom_sheet.dart';
 
 /// Home screen with habit tracking overview
 class HomeScreen extends ConsumerWidget {
@@ -15,7 +16,7 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // TODO: Navigate to add habit screen
+              showHabitFormBottomSheet(context);
             },
           ),
         ],
@@ -29,10 +30,7 @@ class HomeScreen extends ConsumerWidget {
   }
 
   void _showAddHabitDialog(BuildContext context) {
-    // TODO: Show add habit dialog or navigate to habit form
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Add habit functionality coming soon!')),
-    );
+    showHabitFormBottomSheet(context);
   }
 }
 

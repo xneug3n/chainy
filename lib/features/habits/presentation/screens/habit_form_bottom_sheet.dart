@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/habit.dart';
 import '../../domain/models/recurrence_config.dart';
 import '../../../../core/ui/chainy_button.dart';
 import '../../../../core/ui/chainy_text_field.dart';
 import '../../../../core/theme/chainy_colors.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../widgets/icon_selector_widget.dart';
-import '../widgets/color_picker_widget.dart';
 import '../widgets/goal_type_selector_widget.dart';
 import '../widgets/target_value_widget.dart';
 import '../widgets/recurrence_selector_widget.dart';
+import '../controllers/habit_controller.dart';
 
 /// iOS-style bottom sheet for creating and editing habits
-class HabitFormBottomSheet extends StatefulWidget {
+class HabitFormBottomSheet extends ConsumerStatefulWidget {
   final Habit? habit; // Null for new habit, non-null for editing
   
   const HabitFormBottomSheet({
@@ -21,22 +23,23 @@ class HabitFormBottomSheet extends StatefulWidget {
   });
   
   @override
-  State<HabitFormBottomSheet> createState() => _HabitFormBottomSheetState();
+  ConsumerState<HabitFormBottomSheet> createState() => _HabitFormBottomSheetState();
 }
 
-class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
+class _HabitFormBottomSheetState extends ConsumerState<HabitFormBottomSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _noteController;
   
   String _selectedIcon = '📝';
-  Color _selectedColor = ChainyColors.lightAccentBlue;
   GoalType _goalType = GoalType.binary;
   int _targetValue = 1;
   String _unit = 'times';
   RecurrenceType _recurrenceType = RecurrenceType.daily;
   late RecurrenceConfig _recurrenceConfig;
   String? _nameError;
+  bool _isSaving = false;
+  String? _saveError;
   
   @override
   void initState() {
@@ -57,7 +60,6 @@ class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
       _nameController = TextEditingController(text: widget.habit!.name);
       _noteController = TextEditingController(text: widget.habit!.note ?? '');
       _selectedIcon = widget.habit!.icon;
-      _selectedColor = widget.habit!.color;
       _goalType = widget.habit!.goalType;
       _targetValue = widget.habit!.targetValue;
       _unit = widget.habit!.unit ?? 'times';
@@ -115,9 +117,9 @@ class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
                   ),
                 ),
                 ChainyButton(
-                  text: 'Save',
+                  text: _isSaving ? 'Saving...' : 'Save',
                   variant: ChainyButtonVariant.text,
-                  onPressed: _saveHabit,
+                  onPressed: _isSaving ? null : _saveHabit,
                 ),
               ],
             ),
@@ -135,34 +137,64 @@ class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  // Name field
-                  ChainyTextField(
-                    label: 'Habit Name',
-                    hint: 'Enter habit name',
-                    controller: _nameController,
-                    errorText: _nameError,
-                    textInputAction: TextInputAction.next,
-                    onChanged: (value) {
-                      if (_nameError != null) {
-                        setState(() => _nameError = null);
-                      }
-                    },
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Icon selector
-                  IconSelectorWidget(
-                    selectedIcon: _selectedIcon,
-                    onIconSelected: (icon) => setState(() => _selectedIcon = icon),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Color picker
-                  ColorPickerWidget(
-                    selectedColor: _selectedColor,
-                    onColorSelected: (color) => setState(() => _selectedColor = color),
+                  // Error message (if any)
+                  if (_saveError != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.1),
+                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: Colors.red, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _saveError!,
+                              style: const TextStyle(color: Colors.red, fontSize: 14),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, size: 16),
+                            onPressed: () => setState(() => _saveError = null),
+                            color: Colors.red,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Name field with icon selector
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Icon selector box (aligned with text field)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 28), // Align with text field (label height + spacing)
+                        child: IconSelectorWidget(
+                          selectedIcon: _selectedIcon,
+                          onIconSelected: (icon) => setState(() => _selectedIcon = icon),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Name field (expanded to fill remaining space)
+                      Expanded(
+                        child: ChainyTextField(
+                          label: 'Habit Name',
+                          hint: 'Enter habit name',
+                          controller: _nameController,
+                          errorText: _nameError,
+                          textInputAction: TextInputAction.next,
+                          onChanged: (value) {
+                            if (_nameError != null) {
+                              setState(() => _nameError = null);
+                            }
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   
                   const SizedBox(height: 24),
@@ -215,16 +247,138 @@ class _HabitFormBottomSheetState extends State<HabitFormBottomSheet> {
     );
   }
   
-  void _saveHabit() {
+  Future<void> _saveHabit() async {
+    final startTime = DateTime.now();
+    AppLogger.separator('HABIT SAVE OPERATION', tag: 'HabitForm');
+    
+    // Collect form data for logging
+    final formData = {
+      'isEdit': widget.habit != null,
+      'existingHabitId': widget.habit?.id,
+      'name': _nameController.text.trim(),
+      'icon': _selectedIcon,
+      'goalType': _goalType.toString(),
+      'targetValue': _targetValue,
+      'unit': _unit.isEmpty ? null : _unit,
+      'recurrenceType': _recurrenceType.toString(),
+      'note': _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+    };
+    
+    AppLogger.functionEntry('_saveHabit', params: formData, tag: 'HabitForm');
+    
     // Validate form
+    AppLogger.debug('Validating form', tag: 'HabitForm');
     if (!_validateForm()) {
+      AppLogger.warning('Form validation failed', tag: 'HabitForm');
       return;
     }
+    AppLogger.info('Form validation passed', tag: 'HabitForm');
     
-    // TODO: Implement save functionality in subtask 5.3
-    // For now, just close the bottom sheet
-    HapticFeedback.lightImpact();
-    Navigator.of(context).pop();
+    // Clear any previous errors
+    setState(() {
+      _saveError = null;
+      _isSaving = true;
+    });
+    
+    try {
+      AppLogger.debug('Reading habitControllerProvider', tag: 'HabitForm');
+      final habitController = ref.read(habitControllerProvider.notifier);
+      AppLogger.debug('HabitController obtained successfully', tag: 'HabitForm');
+      
+      if (widget.habit == null) {
+        // Creating a new habit
+        AppLogger.info('Creating new habit', tag: 'HabitForm');
+        AppLogger.debug('Calling createHabit with parameters', data: formData, tag: 'HabitForm');
+        
+        await habitController.createHabit(
+          name: _nameController.text.trim(),
+          icon: _selectedIcon,
+          color: ChainyColors.lightAccentBlue, // Default color
+          goalType: _goalType,
+          targetValue: _targetValue,
+          unit: _unit.isEmpty ? null : _unit,
+          recurrenceType: _recurrenceType,
+          recurrenceConfig: _recurrenceConfig,
+          note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+        );
+        
+        AppLogger.info('createHabit completed successfully', tag: 'HabitForm');
+      } else {
+        // Updating an existing habit
+        AppLogger.info('Updating existing habit', data: {'habitId': widget.habit!.id}, tag: 'HabitForm');
+        
+        final updatedHabit = widget.habit!.copyWith(
+          name: _nameController.text.trim(),
+          icon: _selectedIcon,
+          goalType: _goalType,
+          targetValue: _targetValue,
+          unit: _unit.isEmpty ? null : _unit,
+          recurrenceType: _recurrenceType,
+          recurrenceConfig: _recurrenceConfig,
+          note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+          updatedAt: DateTime.now(),
+        );
+        
+        AppLogger.debug('Updated habit object created', data: updatedHabit.toJson(), tag: 'HabitForm');
+        AppLogger.debug('Calling updateHabit', tag: 'HabitForm');
+        
+        await habitController.updateHabit(updatedHabit);
+        
+        AppLogger.info('updateHabit completed successfully', tag: 'HabitForm');
+      }
+      
+      // Success feedback and navigation
+      AppLogger.info('Save operation successful, closing bottom sheet', tag: 'HabitForm');
+      if (mounted) {
+        // Reset saving state
+        setState(() {
+          _isSaving = false;
+        });
+        
+        // Provide haptic feedback
+        HapticFeedback.lightImpact();
+        
+        // Close the bottom sheet and return to home screen
+        Navigator.of(context).pop(true); // Return true to indicate success
+      }
+      
+      final duration = DateTime.now().difference(startTime);
+      AppLogger.functionExit('_saveHabit', tag: 'HabitForm', duration: duration);
+      AppLogger.info('✅ Habit save operation completed successfully', 
+        data: {'duration': '${duration.inMilliseconds}ms'}, tag: 'HabitForm');
+    } catch (error, stack) {
+      final duration = DateTime.now().difference(startTime);
+      
+      AppLogger.error(
+        'Habit save operation failed',
+        error: error,
+        stackTrace: stack,
+        tag: 'HabitForm',
+        context: {
+          'formData': formData,
+          'duration': '${duration.inMilliseconds}ms',
+          'mounted': mounted,
+          'isEditMode': widget.habit != null,
+        },
+      );
+      
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+          _saveError = 'Failed to save habit: ${error.toString()}';
+        });
+        HapticFeedback.heavyImpact();
+      }
+      
+      AppLogger.functionExit('_saveHabit', tag: 'HabitForm', duration: duration);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+        AppLogger.debug('Save operation finalized, isSaving set to false', tag: 'HabitForm');
+      }
+    }
   }
   
   bool _validateForm() {

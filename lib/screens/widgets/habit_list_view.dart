@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/habits/presentation/controllers/habit_filter_controller.dart';
+import '../../features/habits/presentation/screens/habit_form_bottom_sheet.dart';
 import 'habit_row.dart';
 import 'add_new_habit_row.dart';
 import 'habit_filter_controls.dart';
@@ -104,10 +105,7 @@ class _EmptyHabitsView extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () {
-              // TODO: Navigate to add habit screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add habit functionality coming soon!')),
-              );
+              showHabitFormBottomSheet(context);
             },
             icon: const Icon(Icons.add),
             label: const Text('Add Your First Habit'),

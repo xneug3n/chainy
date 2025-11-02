@@ -17,6 +17,7 @@ Establish comprehensive development standards for Flutter applications using Cle
 - UI components and visualization
 - Notifications and monetization
 - Code generation and testing
+- Logging and diagnostics
 
 ## **Requirements / Specifications**
 
@@ -68,6 +69,16 @@ Establish comprehensive development standards for Flutter applications using Cle
 - **JSON Serialization:** `json_serializable` (via Freezed)
 - **Hive Adapters:** `hive_generator` for local storage models
 
+### **Logging & Diagnostics**
+- **Primary:** Use `dart:developer` (`log`, `debugger`) or `logger` package
+- **Forbidden:** Never use `print()` - it cannot be filtered or disabled in production
+- **Centralized Logger:** Create a centralized logging utility (e.g., `AppLogger` in `core/utils/`)
+- **Log Levels:** Use appropriate levels (debug, info, warning, error) with context
+- **Context Information:** Include class name, method name, and relevant data in log entries
+- **Production Safety:** Ensure logs are only active in debug mode or via explicit configuration
+- **Error Logging:** Always include error object and stack trace for error logs
+
+
 ### **Quality & Testing**
 - **Linting:** `flutter_lints` for code quality
 - **Mocking:** `mockito` for unit test mocks
@@ -97,6 +108,7 @@ Establish comprehensive development standards for Flutter applications using Cle
 - **Function Design:** Single responsibility, max 20 lines
 - **Type Safety:** Explicit types for all variables and parameters
 - **Documentation:** Document complex logic and architectural decisions
+- **Logging:** Use centralized logger instead of `print()`, include context (class/method/data) in log entries
 
 ## **Examples / References**
 ```dart
