@@ -4,8 +4,11 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:go_router/go_router.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../../core/navigation/global_navigator.dart';
 import '../../data/habit_repository.dart';
+import '../../presentation/widgets/snooze_dialog.dart';
 
 part 'reminder_service.g.dart';
 
@@ -91,6 +94,9 @@ class ReminderService extends _$ReminderService {
 
       // Create notification channel for Android
       await _createNotificationChannel();
+      
+      // Create notification action buttons for Android
+      await _createNotificationActions();
 
       _initialized = true;
       AppLogger.info('ReminderService initialized successfully', tag: 'ReminderService');
@@ -167,11 +173,13 @@ class ReminderService extends _$ReminderService {
               AndroidFlutterLocalNotificationsPlugin>();
 
       if (androidImplementation != null) {
+        // Use default importance to respect Do-Not-Disturb settings
+        // Users can still customize this in system settings
         const androidChannel = AndroidNotificationChannel(
           'habit_reminders',
           'Habit Reminders',
           description: 'Notifications for habit reminders',
-          importance: Importance.high,
+          importance: Importance.defaultImportance,
           playSound: true,
           enableVibration: true,
         );
@@ -188,6 +196,43 @@ class ReminderService extends _$ReminderService {
       );
     } finally {
       AppLogger.functionExit('ReminderService._createNotificationChannel', tag: 'ReminderService');
+    }
+  }
+
+  /// Create notification action buttons for Android
+  Future<void> _createNotificationActions() async {
+    AppLogger.functionEntry('ReminderService._createNotificationActions', tag: 'ReminderService');
+    
+    if (_flutterLocalNotificationsPlugin == null) {
+      AppLogger.warning('Notification plugin not initialized', tag: 'ReminderService');
+      return;
+    }
+
+    try {
+      final androidImplementation = _flutterLocalNotificationsPlugin!
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidImplementation != null) {
+        // Create notification channel group for organization
+        await androidImplementation.createNotificationChannelGroup(
+          const AndroidNotificationChannelGroup(
+            'habit_reminders_group',
+            'Habit Reminders',
+          ),
+        );
+
+        AppLogger.info('Notification channel group created', tag: 'ReminderService');
+      }
+    } catch (error, stack) {
+      AppLogger.error(
+        'Error creating notification actions',
+        error: error,
+        stackTrace: stack,
+        tag: 'ReminderService',
+      );
+    } finally {
+      AppLogger.functionExit('ReminderService._createNotificationActions', tag: 'ReminderService');
     }
   }
 
@@ -240,16 +285,32 @@ class ReminderService extends _$ReminderService {
       // Create unique notification ID
       final notificationId = _generateNotificationId(habitId, reminderId);
 
-      // Android notification details
-      const androidDetails = AndroidNotificationDetails(
+      // Android notification actions for quick snooze
+      const snooze15Action = AndroidNotificationAction(
+        'snooze_15',
+        'Snooze 15 min',
+        titleColor: Color(0xFF2196F3),
+        showsUserInterface: false,
+      );
+
+      const snooze1HourAction = AndroidNotificationAction(
+        'snooze_1hour',
+        'Snooze 1 hour',
+        titleColor: Color(0xFF2196F3),
+        showsUserInterface: false,
+      );
+
+      // Android notification details with actions
+      final androidDetails = AndroidNotificationDetails(
         'habit_reminders',
         'Habit Reminders',
         channelDescription: 'Notifications for habit reminders',
-        importance: Importance.high,
-        priority: Priority.high,
-        color: Color(0xFF2196F3),
+        importance: Importance.defaultImportance, // Respects Do-Not-Disturb
+        priority: Priority.defaultPriority,
+        color: const Color(0xFF2196F3),
         playSound: true,
         enableVibration: true,
+        actions: [snooze15Action, snooze1HourAction],
       );
 
       // iOS notification details
@@ -259,7 +320,7 @@ class ReminderService extends _$ReminderService {
         presentSound: true,
       );
 
-      const notificationDetails = NotificationDetails(
+      final notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
@@ -482,15 +543,31 @@ class ReminderService extends _$ReminderService {
       // Create unique notification ID for snoozed reminder
       final snoozeNotificationId = _generateNotificationId(habitId, reminderId) + 1000;
 
-      const androidDetails = AndroidNotificationDetails(
+      // Android notification actions for snoozed reminders
+      const snooze15Action = AndroidNotificationAction(
+        'snooze_15',
+        'Snooze 15 min',
+        titleColor: Color(0xFF2196F3),
+        showsUserInterface: false,
+      );
+
+      const snooze1HourAction = AndroidNotificationAction(
+        'snooze_1hour',
+        'Snooze 1 hour',
+        titleColor: Color(0xFF2196F3),
+        showsUserInterface: false,
+      );
+
+      final androidDetails = AndroidNotificationDetails(
         'habit_reminders',
         'Habit Reminders',
         channelDescription: 'Notifications for habit reminders',
-        importance: Importance.high,
-        priority: Priority.high,
-        color: Color(0xFF2196F3),
+        importance: Importance.defaultImportance, // Respects Do-Not-Disturb
+        priority: Priority.defaultPriority,
+        color: const Color(0xFF2196F3),
         playSound: true,
         enableVibration: true,
+        actions: [snooze15Action, snooze1HourAction],
       );
 
       const iosDetails = DarwinNotificationDetails(
@@ -499,7 +576,7 @@ class ReminderService extends _$ReminderService {
         presentSound: true,
       );
 
-      const notificationDetails = NotificationDetails(
+      final notificationDetails = NotificationDetails(
         android: androidDetails,
         iOS: iosDetails,
       );
@@ -544,7 +621,7 @@ class ReminderService extends _$ReminderService {
     }
   }
 
-  /// Handle notification tap
+  /// Handle notification tap or action
   void _onNotificationTapped(NotificationResponse response) {
     AppLogger.functionEntry(
       'ReminderService._onNotificationTapped',
@@ -556,6 +633,13 @@ class ReminderService extends _$ReminderService {
       tag: 'ReminderService',
     );
 
+    // Handle Android notification action buttons
+    if (response.actionId != null && response.actionId!.isNotEmpty) {
+      _handleNotificationAction(response);
+      return;
+    }
+
+    // Handle notification tap (when payload exists)
     if (response.payload == null) {
       AppLogger.debug('Notification tapped without payload', tag: 'ReminderService');
       return;
@@ -563,9 +647,18 @@ class ReminderService extends _$ReminderService {
 
     try {
       final payloadData = jsonDecode(response.payload!);
-      final habitId = payloadData['habitId'];
-      final reminderId = payloadData['reminderId'];
-      final snoozed = payloadData['snoozed'] ?? false;
+      final habitId = payloadData['habitId'] as String?;
+      final reminderId = payloadData['reminderId'] as String?;
+      final snoozed = payloadData['snoozed'] as bool? ?? false;
+
+      if (habitId == null || reminderId == null) {
+        AppLogger.warning(
+          'Notification payload missing habitId or reminderId',
+          data: {'payload': payloadData},
+          tag: 'ReminderService',
+        );
+        return;
+      }
 
       AppLogger.info(
         'Notification tapped',
@@ -577,8 +670,8 @@ class ReminderService extends _$ReminderService {
         tag: 'ReminderService',
       );
 
-      // TODO: Navigate to habit details or show snooze options
-      // This will be implemented in task 8.3
+      // Navigate to home screen and show snooze dialog
+      _handleNotificationTap(habitId, reminderId);
     } catch (error, stack) {
       AppLogger.error(
         'Error parsing notification payload',
@@ -589,6 +682,154 @@ class ReminderService extends _$ReminderService {
       );
     } finally {
       AppLogger.functionExit('ReminderService._onNotificationTapped', tag: 'ReminderService');
+    }
+  }
+
+  /// Handle notification tap - navigate and show snooze dialog
+  void _handleNotificationTap(String habitId, String reminderId) {
+    AppLogger.functionEntry(
+      'ReminderService._handleNotificationTap',
+      params: {
+        'habitId': habitId,
+        'reminderId': reminderId,
+      },
+      tag: 'ReminderService',
+    );
+
+    // Get the navigator context
+    final navigatorContext = globalNavigatorKey.currentContext;
+    if (navigatorContext == null) {
+      AppLogger.warning(
+        'Global navigator context not available',
+        tag: 'ReminderService',
+      );
+      return;
+    }
+
+    // Navigate to home screen if not already there
+    final router = GoRouter.of(navigatorContext);
+    if (router.routerDelegate.currentConfiguration.uri.path != '/') {
+      router.go('/');
+    }
+
+    // Get habit name for the dialog
+    ref.read(habitRepositoryProvider.notifier).getHabitById(habitId).then((habit) {
+      if (habit == null) {
+        AppLogger.warning(
+          'Habit not found for notification',
+          data: {'habitId': habitId},
+          tag: 'ReminderService',
+        );
+        return;
+      }
+
+      // Show snooze dialog after navigation
+      // Use Future.microtask to ensure context is available
+      Future.microtask(() {
+        final context = globalNavigatorKey.currentContext;
+        if (context != null && context.mounted) {
+          SnoozeDialog.show(
+            context: context,
+            habitId: habitId,
+            reminderId: reminderId,
+            habitName: habit.name,
+          );
+        }
+      });
+    }).catchError((error, stack) {
+      AppLogger.error(
+        'Error showing snooze dialog',
+        error: error,
+        stackTrace: stack,
+        tag: 'ReminderService',
+      );
+    });
+  }
+
+  /// Handle notification action button press (Android)
+  void _handleNotificationAction(NotificationResponse response) {
+    AppLogger.functionEntry(
+      'ReminderService._handleNotificationAction',
+      params: {
+        'actionId': response.actionId,
+        'payload': response.payload,
+      },
+      tag: 'ReminderService',
+    );
+
+    if (response.payload == null) {
+      AppLogger.warning(
+        'Notification action triggered without payload',
+        tag: 'ReminderService',
+      );
+      return;
+    }
+
+    try {
+      final payloadData = jsonDecode(response.payload!);
+      final habitId = payloadData['habitId'] as String?;
+      final reminderId = payloadData['reminderId'] as String?;
+
+      if (habitId == null || reminderId == null) {
+        AppLogger.warning(
+          'Notification action payload missing habitId or reminderId',
+          data: {'payload': payloadData},
+          tag: 'ReminderService',
+        );
+        return;
+      }
+
+      // Determine snooze duration based on action
+      Duration? snoozeDuration;
+      if (response.actionId == 'snooze_15') {
+        snoozeDuration = const Duration(minutes: 15);
+      } else if (response.actionId == 'snooze_1hour') {
+        snoozeDuration = const Duration(hours: 1);
+      }
+
+      if (snoozeDuration == null) {
+        AppLogger.warning(
+          'Unknown notification action',
+          data: {'actionId': response.actionId},
+          tag: 'ReminderService',
+        );
+        return;
+      }
+
+      // Execute snooze
+      snoozeReminder(
+        habitId: habitId,
+        reminderId: reminderId,
+        duration: snoozeDuration,
+      ).catchError((error, stack) {
+        AppLogger.error(
+          'Error executing snooze from notification action',
+          error: error,
+          stackTrace: stack,
+          tag: 'ReminderService',
+        );
+      });
+
+      AppLogger.info(
+        'Notification action executed',
+        data: {
+          'actionId': response.actionId,
+          'habitId': habitId,
+          'reminderId': reminderId,
+          'duration': snoozeDuration.inMinutes,
+        },
+        tag: 'ReminderService',
+      );
+    } catch (error, stack) {
+      AppLogger.error(
+        'Error handling notification action',
+        error: error,
+        stackTrace: stack,
+        tag: 'ReminderService',
+        context: {'actionId': response.actionId, 'payload': response.payload},
+      );
+    } finally {
+      AppLogger.functionExit('ReminderService._handleNotificationAction', tag: 'ReminderService');
     }
   }
 

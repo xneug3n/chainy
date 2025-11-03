@@ -4,6 +4,7 @@ import '../../screens/home_screen.dart';
 import '../../screens/statistics_screen.dart';
 import '../../screens/achievements_screen.dart';
 import '../../screens/settings_screen.dart';
+import '../navigation/global_navigator.dart';
 
 /// App router configuration with TabBar navigation
 class AppRouter {
@@ -13,6 +14,7 @@ class AppRouter {
   static const String settings = '/settings';
   
   static final GoRouter router = GoRouter(
+    navigatorKey: globalNavigatorKey,
     initialLocation: home,
     routes: [
       ShellRoute(

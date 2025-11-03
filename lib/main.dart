@@ -31,13 +31,29 @@ class ReminderServiceInitializer extends ConsumerStatefulWidget {
 }
 
 class _ReminderServiceInitializerState
-    extends ConsumerState<ReminderServiceInitializer> {
+    extends ConsumerState<ReminderServiceInitializer> with WidgetsBindingObserver {
   bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeReminderService();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Log app lifecycle changes for notification handling
+    // flutter_local_notifications handles all states (foreground, background, terminated)
+    // automatically, but we log for debugging
+    debugPrint('App lifecycle changed: $state');
   }
 
   Future<void> _initializeReminderService() async {
