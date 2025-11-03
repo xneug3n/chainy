@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/chainy_colors.dart';
 import 'achievements/widgets/badge_card.dart';
-import 'achievements/models/achievement_interface.dart';
+import 'achievements/controllers/achievement_provider.dart';
 
 /// Achievements screen showing user accomplishments
 class AchievementsScreen extends ConsumerWidget {
@@ -10,20 +10,39 @@ class AchievementsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Connect to AchievementProvider when implemented (task 7.3)
-    // For now, using empty list as placeholder
-    // Once provider is available, replace with:
-    // final achievements = ref.watch(achievementProviderProvider);
-    // return achievements.when(...)
-    const achievementCount = 0;
+    final achievementsAsync = ref.watch(achievementProviderProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Achievements'),
       ),
-      body: achievementCount == 0
-          ? _buildEmptyState(context)
-          : _buildGridView(context, ref, achievementCount),
+      body: achievementsAsync.when(
+        data: (achievements) {
+          if (achievements.isEmpty) {
+            return _buildEmptyState(context);
+          }
+          return _buildGridView(context, achievements);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: ChainyColors.error),
+              const SizedBox(height: 16),
+              Text(
+                'Error loading achievements',
+                style: TextStyle(color: ChainyColors.getPrimaryText(Theme.of(context).brightness)),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: () => ref.invalidate(achievementProviderProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -64,7 +83,7 @@ class AchievementsScreen extends ConsumerWidget {
   }
 
   /// Build grid view with achievement badges
-  Widget _buildGridView(BuildContext context, WidgetRef ref, int itemCount) {
+  Widget _buildGridView(BuildContext context, List<AchievementWithStatus> achievements) {
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -73,39 +92,15 @@ class AchievementsScreen extends ConsumerWidget {
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
       ),
-      itemCount: itemCount,
+      itemCount: achievements.length,
       itemBuilder: (context, index) {
-        // TODO: Replace with actual Achievement data from AchievementProvider (task 7.3)
-        // Example usage:
-        // final achievement = achievements[index];
-        // return BadgeCard(
-        //   achievement: achievement,
-        //   isUnlocked: ref.read(achievementProviderProvider.notifier).isUnlocked(achievement.id),
-        //   progress: ref.read(achievementProviderProvider.notifier).getProgress(achievement.id),
-        // );
-        return _buildPlaceholderBadge(context);
+        final achievementWithStatus = achievements[index];
+        return BadgeCard(
+          achievement: achievementWithStatus.achievement,
+          isUnlocked: achievementWithStatus.isUnlocked,
+          progress: achievementWithStatus.progress,
+        );
       },
-    );
-  }
-
-  /// Build placeholder badge card (kept for backward compatibility)
-  /// This will be replaced when AchievementProvider provides real data
-  Widget _buildPlaceholderBadge(BuildContext context) {
-    // Create a placeholder achievement for demonstration
-    // This will be removed when real data is available
-    const placeholderAchievement = Achievement(
-      id: 'placeholder',
-      title: 'Badge',
-      description: 'Placeholder badge',
-      icon: Icons.emoji_events_outlined,
-      category: AchievementCategory.firstSteps,
-      targetValue: 1,
-    );
-    
-    return BadgeCard(
-      achievement: placeholderAchievement,
-      isUnlocked: false,
-      progress: 0.0,
     );
   }
 }
