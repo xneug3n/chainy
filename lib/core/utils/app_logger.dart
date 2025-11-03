@@ -4,10 +4,13 @@ import 'package:flutter/foundation.dart';
 class AppLogger {
   static const String _prefix = '[Chainy]';
   static String get _separator => List.generate(80, (_) => '─').join();
+  
+  /// Global flag to temporarily disable all logging
+  static bool enabled = false;
 
   /// Log debug information
   static void debug(String message, {Object? data, String? tag}) {
-    if (kDebugMode) {
+    if (kDebugMode && enabled) {
       final timestamp = DateTime.now().toIso8601String();
       final tagStr = tag != null ? '[$tag]' : '';
       debugPrint('$_prefix $tagStr $timestamp | DEBUG: $message');
@@ -19,7 +22,7 @@ class AppLogger {
 
   /// Log information
   static void info(String message, {Object? data, String? tag}) {
-    if (kDebugMode) {
+    if (kDebugMode && enabled) {
       final timestamp = DateTime.now().toIso8601String();
       final tagStr = tag != null ? '[$tag]' : '';
       debugPrint('$_prefix $tagStr $timestamp | INFO: $message');
@@ -31,7 +34,7 @@ class AppLogger {
 
   /// Log warnings
   static void warning(String message, {Object? data, String? tag, StackTrace? stackTrace}) {
-    if (kDebugMode) {
+    if (kDebugMode && enabled) {
       final timestamp = DateTime.now().toIso8601String();
       final tagStr = tag != null ? '[$tag]' : '';
       debugPrint('$_prefix $tagStr $timestamp | ⚠️ WARNING: $message');
@@ -52,7 +55,7 @@ class AppLogger {
     String? tag,
     Map<String, dynamic>? context,
   }) {
-    if (kDebugMode) {
+    if (kDebugMode && enabled) {
       final timestamp = DateTime.now().toIso8601String();
       final tagStr = tag != null ? '[$tag]' : '';
       debugPrint('');
@@ -79,7 +82,7 @@ class AppLogger {
 
   /// Log function entry
   static void functionEntry(String functionName, {Map<String, dynamic>? params, String? tag}) {
-    if (kDebugMode) {
+    if (kDebugMode && enabled) {
       final timestamp = DateTime.now().toIso8601String();
       final tagStr = tag != null ? '[$tag]' : '';
       debugPrint('$_prefix $tagStr $timestamp | → ENTRY: $functionName');
@@ -94,7 +97,7 @@ class AppLogger {
 
   /// Log function exit
   static void functionExit(String functionName, {Object? result, String? tag, Duration? duration}) {
-    if (kDebugMode) {
+    if (kDebugMode && enabled) {
       final timestamp = DateTime.now().toIso8601String();
       final tagStr = tag != null ? '[$tag]' : '';
       final durationStr = duration != null ? ' (${duration.inMilliseconds}ms)' : '';
@@ -107,7 +110,7 @@ class AppLogger {
 
   /// Log section separator
   static void separator(String label, {String? tag}) {
-    if (kDebugMode) {
+    if (kDebugMode && enabled) {
       final tagStr = tag != null ? '[$tag]' : '';
       debugPrint('');
       debugPrint('$_prefix $tagStr $_separator');

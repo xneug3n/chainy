@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/chainy_theme.dart';
 import 'core/routes/app_router.dart';
 import 'core/di/hive_setup.dart';
+import 'core/utils/app_logger.dart';
 import 'features/habits/domain/services/reminder_service.dart';
 
 void main() async {
@@ -53,7 +54,7 @@ class _ReminderServiceInitializerState
     // Log app lifecycle changes for notification handling
     // flutter_local_notifications handles all states (foreground, background, terminated)
     // automatically, but we log for debugging
-    debugPrint('App lifecycle changed: $state');
+    AppLogger.debug('App lifecycle changed: $state', tag: 'AppLifecycle');
   }
 
   Future<void> _initializeReminderService() async {
@@ -65,7 +66,7 @@ class _ReminderServiceInitializerState
       _initialized = true;
     } catch (e) {
       // Log error but don't block app startup
-      debugPrint('Failed to initialize ReminderService: $e');
+      AppLogger.error('Failed to initialize ReminderService', error: e, tag: 'AppInit');
     }
   }
 
