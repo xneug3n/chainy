@@ -19,6 +19,7 @@ class Habit with _$Habit {
     required RecurrenceType recurrenceType,
     required RecurrenceConfig recurrenceConfig,
     String? note,
+    @Default(0) int currentStreak,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _Habit;

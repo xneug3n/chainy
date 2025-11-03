@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../data/check_in_repository.dart';
+import '../../data/habit_repository.dart';
 import '../../domain/models/check_in.dart';
 import '../../domain/services/progress_service.dart';
 import '../../domain/services/streak_service.dart';
@@ -68,6 +69,13 @@ class CheckInController extends _$CheckInController {
         await repository.addCheckIn(checkIn);
       }
 
+      // Update the persisted streak value after check-in
+      AppLogger.debug('Calculating and updating streak', 
+        data: {'habitId': habitId},
+        tag: 'CheckInController');
+      final streakService = ref.read(streakServiceProvider.notifier);
+      await streakService.calculateAndUpdateStreak(habitId);
+
       // Invalidate all dependent providers to trigger UI updates
       AppLogger.debug('Invalidating dependent providers', tag: 'CheckInController');
       
@@ -82,6 +90,9 @@ class CheckInController extends _$CheckInController {
       
       // Also invalidate the check-in repository to ensure fresh data
       ref.invalidate(checkInRepositoryProvider);
+      
+      // Invalidate habit repository to ensure habit updates are reflected
+      ref.invalidate(habitRepositoryProvider);
 
       final duration = DateTime.now().difference(startTime);
       AppLogger.functionExit('CheckInController.saveCheckIn', 
@@ -132,11 +143,19 @@ class CheckInController extends _$CheckInController {
       if (checkIn != null) {
         await repository.deleteCheckIn(checkIn.id);
         
+        // Update the persisted streak value after check-in deletion
+        AppLogger.debug('Calculating and updating streak after deletion', 
+          data: {'habitId': habitId},
+          tag: 'CheckInController');
+        final streakService = ref.read(streakServiceProvider.notifier);
+        await streakService.calculateAndUpdateStreak(habitId);
+        
         // Invalidate all dependent providers
         ref.invalidate(progressServiceProvider);
         ref.invalidate(streakServiceProvider);
         ref.invalidate(statisticsProviderProvider);
         ref.invalidate(checkInRepositoryProvider);
+        ref.invalidate(habitRepositoryProvider);
         
         AppLogger.info('Check-in deleted successfully', 
           data: {'checkInId': checkIn.id},

@@ -23,8 +23,9 @@ class HabitDto with _$HabitDto {
     @HiveField(7) required String recurrenceType,
     @HiveField(8) required Map<String, dynamic> recurrenceConfig,
     @HiveField(9) String? note,
-    @HiveField(10) required String createdAt,
-    @HiveField(11) required String updatedAt,
+    @HiveField(10) @Default(0) int currentStreak,
+    @HiveField(11) required String createdAt,
+    @HiveField(12) required String updatedAt,
   }) = _HabitDto;
 
   factory HabitDto.fromJson(Map<String, dynamic> json) => _$HabitDtoFromJson(json);
@@ -42,6 +43,7 @@ class HabitDto with _$HabitDto {
       recurrenceType: habit.recurrenceType.name,
       recurrenceConfig: habit.recurrenceConfig.toJson(),
       note: habit.note,
+      currentStreak: habit.currentStreak,
       createdAt: habit.createdAt.toIso8601String(),
       updatedAt: habit.updatedAt.toIso8601String(),
     );
@@ -135,6 +137,7 @@ extension HabitDtoExtension on HabitDto {
         recurrenceType: RecurrenceType.values.firstWhere((e) => e.name == recurrenceType),
         recurrenceConfig: config,
         note: note,
+        currentStreak: currentStreak,
         createdAt: createdAtDate,
         updatedAt: updatedAtDate,
       );

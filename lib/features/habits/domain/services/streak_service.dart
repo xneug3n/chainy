@@ -15,12 +15,41 @@ class StreakService extends _$StreakService {
   }
 
   /// Get current streak for a specific habit
+  /// Uses the persisted streak value from the habit model, ensuring it persists across app restarts
+  /// For existing habits with streak=0 but existing check-ins, calculates and persists the initial streak
   Future<int> getCurrentStreak(String habitId) async {
     final habit = await ref.read(habitRepositoryProvider.notifier).getHabitById(habitId);
     if (habit == null) return 0;
 
+    // If streak is 0 but there are check-ins, calculate initial streak (migration for existing habits)
+    if (habit.currentStreak == 0) {
+      final checkIns = await ref.read(checkInRepositoryProvider.notifier).getCheckInsForHabit(habitId);
+      if (checkIns.isNotEmpty) {
+        // Calculate and persist the streak for existing habits
+        return await calculateAndUpdateStreak(habitId);
+      }
+    }
+
+    // Return the persisted streak value - it will be updated by CheckInController when check-ins occur
+    // This ensures the streak persists across app restarts
+    return habit.currentStreak;
+  }
+
+  /// Calculate and update the streak for a habit based on check-ins
+  /// This is called by CheckInController after a check-in to update the persisted streak value
+  Future<int> calculateAndUpdateStreak(String habitId) async {
+    final habitRepo = ref.read(habitRepositoryProvider.notifier);
+    final habit = await habitRepo.getHabitById(habitId);
+    if (habit == null) return 0;
+
     final checkIns = await ref.read(checkInRepositoryProvider.notifier).getCheckInsForHabit(habitId);
-    if (checkIns.isEmpty) return 0;
+    if (checkIns.isEmpty) {
+      // No check-ins: streak should be 0
+      if (habit.currentStreak != 0) {
+        await _updateHabitStreak(habitRepo, habit, 0);
+      }
+      return 0;
+    }
 
     // Sort check-ins by date (most recent first)
     checkIns.sort((a, b) => b.date.compareTo(a.date));
@@ -55,7 +84,25 @@ class StreakService extends _$StreakService {
       }
     }
     
+    // Update the habit with the calculated streak if it has changed
+    if (habit.currentStreak != streak) {
+      await _updateHabitStreak(habitRepo, habit, streak);
+    }
+    
     return streak;
+  }
+
+  /// Helper method to update the streak value in the habit
+  Future<void> _updateHabitStreak(
+    HabitRepository habitRepo,
+    Habit habit,
+    int newStreak,
+  ) async {
+    final updatedHabit = habit.copyWith(
+      currentStreak: newStreak,
+      updatedAt: DateTime.now(),
+    );
+    await habitRepo.saveHabit(updatedHabit);
   }
 
   /// Get longest streak for a specific habit

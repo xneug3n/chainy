@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/habits/domain/models/habit.dart';
-import '../../features/habits/presentation/controllers/check_in_controller.dart';
 
 /// Compact progress widget for quantitative habits
 /// Displays numeric progress with a linear progress bar
@@ -104,38 +102,6 @@ class _QuantitativeProgressWidgetState
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              // Increment/decrement buttons
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Decrement button
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    iconSize: 20,
-                    padding: const EdgeInsets.all(4),
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                    onPressed: widget.currentValue > 0
-                        ? () => _handleDecrement(context)
-                        : null,
-                    color: theme.colorScheme.primary,
-                  ),
-                  // Increment button
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    iconSize: 20,
-                    padding: const EdgeInsets.all(4),
-                    constraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 32,
-                    ),
-                    onPressed: () => _handleIncrement(context),
-                    color: theme.colorScheme.primary,
-                  ),
-                ],
-              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -173,80 +139,5 @@ class _QuantitativeProgressWidgetState
     );
   }
 
-  void _handleIncrement(BuildContext context) {
-    HapticFeedback.lightImpact();
-    final today = DateTime.now();
-    final checkInController = ref.read(checkInControllerProvider.notifier);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
-    int newValue;
-    if (_isMultiplePerDay) {
-      // For multiplePerDay: add one complete session (targetValue units)
-      newValue = widget.currentValue + widget.habit.targetValue;
-    } else {
-      // For regular quantitative: add 1 unit
-      newValue = widget.currentValue + 1;
-    }
-    
-    checkInController.saveCheckIn(
-      habitId: widget.habit.id,
-      date: today,
-      value: newValue,
-    ).catchError((error) {
-      if (mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text('Fehler: ${error.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    });
-  }
-
-  void _handleDecrement(BuildContext context) {
-    HapticFeedback.lightImpact();
-    final today = DateTime.now();
-    final checkInController = ref.read(checkInControllerProvider.notifier);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
-    int newValue;
-    if (_isMultiplePerDay) {
-      // For multiplePerDay: remove one complete session (targetValue units)
-      newValue = (widget.currentValue - widget.habit.targetValue).clamp(0, widget.currentValue);
-    } else {
-      // For regular quantitative: remove 1 unit
-      newValue = widget.currentValue > 0 ? widget.currentValue - 1 : 0;
-    }
-    
-    if (newValue == 0) {
-      // Delete check-in if value becomes 0
-      checkInController.deleteCheckIn(widget.habit.id, today).catchError((error) {
-        if (mounted) {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text('Fehler: ${error.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      });
-    } else {
-      checkInController.saveCheckIn(
-        habitId: widget.habit.id,
-        date: today,
-        value: newValue,
-      ).catchError((error) {
-        if (mounted) {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text('Fehler: ${error.toString()}'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      });
-    }
-  }
 }
 
