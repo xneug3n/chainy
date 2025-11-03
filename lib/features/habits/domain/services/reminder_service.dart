@@ -113,7 +113,31 @@ class ReminderService extends _$ReminderService {
     }
   }
 
-  /// Request notification permissions
+  /// Request notification permissions (public method for UI)
+  /// Ensures service is initialized before requesting permissions
+  Future<bool> requestPermissions() async {
+    AppLogger.functionEntry('ReminderService.requestPermissions', tag: 'ReminderService');
+    
+    // Ensure service is initialized
+    if (!_initialized) {
+      AppLogger.debug('ReminderService not initialized, initializing now', tag: 'ReminderService');
+      try {
+        await initialize();
+      } catch (error, stack) {
+        AppLogger.error(
+          'Error initializing ReminderService before permission request',
+          error: error,
+          stackTrace: stack,
+          tag: 'ReminderService',
+        );
+        return false;
+      }
+    }
+    
+    return await _requestPermissions();
+  }
+
+  /// Request notification permissions (internal method)
   Future<bool> _requestPermissions() async {
     AppLogger.functionEntry('ReminderService._requestPermissions', tag: 'ReminderService');
     
