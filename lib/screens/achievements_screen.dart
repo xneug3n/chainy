@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme/chainy_colors.dart';
+import 'achievements/widgets/badge_card.dart';
+import 'achievements/models/achievement_interface.dart';
 
 /// Achievements screen showing user accomplishments
 class AchievementsScreen extends ConsumerWidget {
@@ -10,6 +12,9 @@ class AchievementsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // TODO: Connect to AchievementProvider when implemented (task 7.3)
     // For now, using empty list as placeholder
+    // Once provider is available, replace with:
+    // final achievements = ref.watch(achievementProviderProvider);
+    // return achievements.when(...)
     const achievementCount = 0;
 
     return Scaffold(
@@ -70,58 +75,37 @@ class AchievementsScreen extends ConsumerWidget {
       ),
       itemCount: itemCount,
       itemBuilder: (context, index) {
-        // TODO: Replace with actual BadgeCard when AchievementProvider is implemented
+        // TODO: Replace with actual Achievement data from AchievementProvider (task 7.3)
+        // Example usage:
+        // final achievement = achievements[index];
+        // return BadgeCard(
+        //   achievement: achievement,
+        //   isUnlocked: ref.read(achievementProviderProvider.notifier).isUnlocked(achievement.id),
+        //   progress: ref.read(achievementProviderProvider.notifier).getProgress(achievement.id),
+        // );
         return _buildPlaceholderBadge(context);
       },
     );
   }
 
-  /// Build placeholder badge card (to be replaced with BadgeCard in task 7.2)
+  /// Build placeholder badge card (kept for backward compatibility)
+  /// This will be replaced when AchievementProvider provides real data
   Widget _buildPlaceholderBadge(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
+    // Create a placeholder achievement for demonstration
+    // This will be removed when real data is available
+    const placeholderAchievement = Achievement(
+      id: 'placeholder',
+      title: 'Badge',
+      description: 'Placeholder badge',
+      icon: Icons.emoji_events_outlined,
+      category: AchievementCategory.firstSteps,
+      targetValue: 1,
+    );
     
-    return Container(
-      decoration: BoxDecoration(
-        color: ChainyColors.getCard(brightness),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: ChainyColors.getBorder(brightness),
-          width: 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: ChainyColors.getGray(brightness),
-              ),
-              child: Icon(
-                Icons.emoji_events_outlined,
-                color: ChainyColors.getSecondaryText(brightness),
-                size: 30,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Badge',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w400,
-                color: ChainyColors.getSecondaryText(brightness),
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
+    return BadgeCard(
+      achievement: placeholderAchievement,
+      isUnlocked: false,
+      progress: 0.0,
     );
   }
 }
