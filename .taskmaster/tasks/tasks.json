@@ -397,7 +397,7 @@
               1
             ],
             "details": "Design a clean, iOS-style welcome screen with large typography for name input. Include friendly welcome message and implement the transition effect where the input transforms into a headline format after entry. Add validation to ensure name is not empty before allowing to proceed.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test name input validation, keyboard handling, and transition animations."
           },
           {
@@ -545,7 +545,7 @@
     ],
     "metadata": {
       "created": "2025-10-25T21:56:43.523Z",
-      "updated": "2025-11-03T20:23:11.114Z",
+      "updated": "2025-11-03T20:58:55.396Z",
       "description": "Tasks for master context"
     }
   }
