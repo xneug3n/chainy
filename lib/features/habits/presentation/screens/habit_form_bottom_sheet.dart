@@ -11,6 +11,8 @@ import '../widgets/icon_selector_widget.dart';
 import '../widgets/goal_type_selector_widget.dart';
 import '../widgets/target_value_widget.dart';
 import '../widgets/recurrence_selector_widget.dart';
+import '../widgets/reminder_form_widget.dart';
+import '../../domain/models/reminder.dart';
 import '../controllers/habit_controller.dart';
 
 /// iOS-style bottom sheet for creating and editing habits
@@ -40,6 +42,7 @@ class _HabitFormBottomSheetState extends ConsumerState<HabitFormBottomSheet> {
   String? _nameError;
   bool _isSaving = false;
   String? _saveError;
+  List<Reminder> _reminders = [];
   
   @override
   void initState() {
@@ -65,6 +68,7 @@ class _HabitFormBottomSheetState extends ConsumerState<HabitFormBottomSheet> {
       _unit = widget.habit!.unit ?? 'times';
       _recurrenceType = widget.habit!.recurrenceType;
       _recurrenceConfig = widget.habit!.recurrenceConfig;
+      _reminders = List.from(widget.habit!.reminders);
     } else {
       // Initialize with default values
       _nameController = TextEditingController();
@@ -237,6 +241,19 @@ class _HabitFormBottomSheetState extends ConsumerState<HabitFormBottomSheet> {
                     textInputAction: TextInputAction.done,
                   ),
                   
+                  const SizedBox(height: 24),
+                  
+                  // Reminders section
+                  ReminderFormWidget(
+                    habitId: widget.habit?.id ?? 'temp',
+                    existingReminders: _reminders,
+                    onRemindersChanged: (reminders) {
+                      setState(() {
+                        _reminders = reminders;
+                      });
+                    },
+                  ),
+                  
                   const SizedBox(height: 40),
                 ],
               ),
@@ -290,17 +307,29 @@ class _HabitFormBottomSheetState extends ConsumerState<HabitFormBottomSheet> {
         AppLogger.info('Creating new habit', tag: 'HabitForm');
         AppLogger.debug('Calling createHabit with parameters', data: formData, tag: 'HabitForm');
         
-        await habitController.createHabit(
+        final newHabitId = DateTime.now().millisecondsSinceEpoch.toString();
+        final now = DateTime.now();
+        
+        // Update reminder habitIds to match the new habit
+        final remindersWithHabitId = _reminders.map((r) => r.copyWith(habitId: newHabitId)).toList();
+        
+        final newHabit = Habit(
+          id: newHabitId,
           name: _nameController.text.trim(),
           icon: _selectedIcon,
-          color: ChainyColors.lightAccentBlue, // Default color
+          color: ChainyColors.lightAccentBlue,
           goalType: _goalType,
           targetValue: _targetValue,
           unit: _unit.isEmpty ? null : _unit,
           recurrenceType: _recurrenceType,
           recurrenceConfig: _recurrenceConfig,
           note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+          reminders: remindersWithHabitId,
+          createdAt: now,
+          updatedAt: now,
         );
+        
+        await habitController.updateHabit(newHabit);
         
         AppLogger.info('createHabit completed successfully', tag: 'HabitForm');
       } else {
@@ -316,6 +345,7 @@ class _HabitFormBottomSheetState extends ConsumerState<HabitFormBottomSheet> {
           recurrenceType: _recurrenceType,
           recurrenceConfig: _recurrenceConfig,
           note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+          reminders: _reminders,
           updatedAt: DateTime.now(),
         );
         

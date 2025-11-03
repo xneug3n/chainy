@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive/hive.dart';
 import '../../domain/models/habit.dart';
 import '../../domain/models/recurrence_config.dart';
+import '../../domain/models/reminder.dart';
 import '../../../../core/utils/app_logger.dart';
 
 part 'habit_dto.freezed.dart';
@@ -24,6 +25,7 @@ class HabitDto with _$HabitDto {
     @HiveField(8) required Map<String, dynamic> recurrenceConfig,
     @HiveField(9) String? note,
     @HiveField(10) @Default(0) int currentStreak,
+    @HiveField(13) @Default([]) List<Map<String, dynamic>> reminders,
     @HiveField(11) required String createdAt,
     @HiveField(12) required String updatedAt,
   }) = _HabitDto;
@@ -44,6 +46,7 @@ class HabitDto with _$HabitDto {
       recurrenceConfig: habit.recurrenceConfig.toJson(),
       note: habit.note,
       currentStreak: habit.currentStreak,
+      reminders: habit.reminders.map((r) => r.toJson()).toList(),
       createdAt: habit.createdAt.toIso8601String(),
       updatedAt: habit.updatedAt.toIso8601String(),
     );
@@ -126,6 +129,23 @@ extension HabitDtoExtension on HabitDto {
         updatedAtDate = createdAtDate;
       }
 
+      // Safely deserialize reminders with fallback
+      List<Reminder> remindersList;
+      try {
+        remindersList = reminders
+            .map((json) => Reminder.fromJson(json))
+            .toList();
+      } catch (e, stack) {
+        AppLogger.error(
+          'Failed to deserialize reminders, using empty list',
+          error: e,
+          stackTrace: stack,
+          tag: 'HabitDto',
+          context: {'habitId': id, 'reminders': reminders.toString()},
+        );
+        remindersList = [];
+      }
+
       final habit = Habit(
         id: id,
         name: name,
@@ -138,6 +158,7 @@ extension HabitDtoExtension on HabitDto {
         recurrenceConfig: config,
         note: note,
         currentStreak: currentStreak,
+        reminders: remindersList,
         createdAt: createdAtDate,
         updatedAt: updatedAtDate,
       );

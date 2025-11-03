@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'recurrence_config.dart';
+import 'reminder.dart';
 
 part 'habit.freezed.dart';
 part 'habit.g.dart';
@@ -20,6 +21,7 @@ class Habit with _$Habit {
     required RecurrenceConfig recurrenceConfig,
     String? note,
     @Default(0) int currentStreak,
+    @Default([]) List<Reminder> reminders,
     required DateTime createdAt,
     required DateTime updatedAt,
   }) = _Habit;
