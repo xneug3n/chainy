@@ -33,6 +33,17 @@ class OnboardingProgressIndicator extends StatelessWidget {
                   ? ChainyColors.getAccentBlue(brightness)
                   : ChainyColors.getGray(brightness),
               borderRadius: BorderRadius.circular(2),
+              // Subtle glow for active segments in dark mode
+              boxShadow: index <= currentStep && brightness == Brightness.dark
+                  ? [
+                      BoxShadow(
+                        color: ChainyColors.getAccentBlue(brightness)
+                            .withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        spreadRadius: 0,
+                      ),
+                    ]
+                  : null,
             ),
           ),
         ),

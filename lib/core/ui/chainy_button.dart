@@ -41,7 +41,7 @@ class ChainyButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             minimumSize: isFullWidth ? const Size(double.infinity, 44) : null,
           ),
-          child: _buildButtonContent(),
+          child: _buildButtonContent(brightness),
         );
         break;
       case ChainyButtonVariant.secondary:
@@ -56,7 +56,7 @@ class ChainyButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             minimumSize: isFullWidth ? const Size(double.infinity, 44) : null,
           ),
-          child: _buildButtonContent(),
+          child: _buildButtonContent(brightness),
         );
         break;
       case ChainyButtonVariant.text:
@@ -70,7 +70,7 @@ class ChainyButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             minimumSize: isFullWidth ? const Size(double.infinity, 44) : null,
           ),
-          child: _buildButtonContent(),
+          child: _buildButtonContent(brightness),
         );
         break;
     }
@@ -78,13 +78,17 @@ class ChainyButton extends StatelessWidget {
     return button;
   }
   
-  Widget _buildButtonContent() {
+  Widget _buildButtonContent(Brightness brightness) {
+    
     if (isLoading) {
-      return const SizedBox(
+      return SizedBox(
         width: 20,
         height: 20,
         child: CircularProgressIndicator(
           strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(
+            ChainyColors.getPrimaryText(brightness),
+          ),
         ),
       );
     }

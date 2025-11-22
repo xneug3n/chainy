@@ -73,10 +73,20 @@ class _OnboardingNotificationScreenState
       });
 
       if (mounted) {
+        final theme = Theme.of(context);
+        final brightness = theme.brightness;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               'Failed to request notification permissions. You can enable them later in settings.',
+              style: TextStyle(
+                color: ChainyColors.getPrimaryText(brightness),
+              ),
+            ),
+            backgroundColor: ChainyColors.getCard(brightness),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
             duration: const Duration(seconds: 3),
           ),
@@ -131,16 +141,28 @@ class _OnboardingNotificationScreenState
                   icon: Icons.notifications_outlined,
                 )
               else
-                // Success state
+                // Success state with iOS dark mode styling
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: ChainyColors.success.withValues(alpha: 0.15),
+                    color: ChainyColors.success.withValues(
+                      alpha: brightness == Brightness.dark ? 0.2 : 0.15,
+                    ),
                     border: Border.all(
                       color: ChainyColors.success,
                       width: 1,
                     ),
                     borderRadius: BorderRadius.circular(16),
+                    // Subtle shadow for depth in dark mode
+                    boxShadow: brightness == Brightness.dark
+                        ? [
+                            BoxShadow(
+                              color: ChainyColors.success.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              spreadRadius: 0,
+                            ),
+                          ]
+                        : null,
                   ),
                   child: Row(
                     children: [

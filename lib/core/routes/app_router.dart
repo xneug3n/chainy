@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/home_screen.dart';
 import '../../screens/statistics_screen.dart';
 import '../../screens/achievements_screen.dart';
 import '../../screens/settings_screen.dart';
+import '../../screens/onboarding/onboarding_flow.dart';
 import '../navigation/global_navigator.dart';
+import '../config/preferences_repository.dart';
 
 /// App router configuration with TabBar navigation
 class AppRouter {
@@ -12,40 +15,71 @@ class AppRouter {
   static const String statistics = '/statistics';
   static const String achievements = '/achievements';
   static const String settings = '/settings';
+  static const String onboarding = '/onboarding';
   
-  static final GoRouter router = GoRouter(
-    navigatorKey: globalNavigatorKey,
-    initialLocation: home,
-    routes: [
-      ShellRoute(
-        builder: (context, state, child) {
-          return MainNavigationShell(child: child);
-        },
-        routes: [
-          GoRoute(
-            path: home,
-            name: 'home',
-            builder: (context, state) => const HomeScreen(),
-          ),
-          GoRoute(
-            path: statistics,
-            name: 'statistics',
-            builder: (context, state) => const StatisticsScreen(),
-          ),
-          GoRoute(
-            path: achievements,
-            name: 'achievements',
-            builder: (context, state) => const AchievementsScreen(),
-          ),
-          GoRoute(
-            path: settings,
-            name: 'settings',
-            builder: (context, state) => const SettingsScreen(),
-          ),
-        ],
-      ),
-    ],
-  );
+  /// Creates the router with onboarding check logic
+  static GoRouter createRouter(WidgetRef ref) {
+    return GoRouter(
+      navigatorKey: globalNavigatorKey,
+      initialLocation: home,
+      redirect: (context, state) {
+        final location = state.uri.path;
+        
+        // Allow access to onboarding route
+        if (location == onboarding) {
+          return null;
+        }
+        
+        // Check if onboarding is completed
+        final preferencesRepo = ref.read(preferencesRepositoryProvider.notifier);
+        final isCompleted = preferencesRepo.isOnboardingCompleted();
+        
+        // Redirect to onboarding if not completed
+        if (!isCompleted) {
+          return onboarding;
+        }
+        
+        // Allow access to main app routes
+        return null;
+      },
+      routes: [
+        // Onboarding route (outside ShellRoute, no bottom navigation)
+        GoRoute(
+          path: onboarding,
+          name: 'onboarding',
+          builder: (context, state) => const OnboardingFlow(),
+        ),
+        // Main app routes with bottom navigation
+        ShellRoute(
+          builder: (context, state, child) {
+            return MainNavigationShell(child: child);
+          },
+          routes: [
+            GoRoute(
+              path: home,
+              name: 'home',
+              builder: (context, state) => const HomeScreen(),
+            ),
+            GoRoute(
+              path: statistics,
+              name: 'statistics',
+              builder: (context, state) => const StatisticsScreen(),
+            ),
+            GoRoute(
+              path: achievements,
+              name: 'achievements',
+              builder: (context, state) => const AchievementsScreen(),
+            ),
+            GoRoute(
+              path: settings,
+              name: 'settings',
+              builder: (context, state) => const SettingsScreen(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 /// Main navigation shell with TabBar

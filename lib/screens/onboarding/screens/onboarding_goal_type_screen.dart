@@ -2,28 +2,28 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/chainy_colors.dart';
 import '../../../features/habits/domain/models/habit.dart';
 
-/// Frequency selection screen - Fourth step of onboarding
+/// Goal type selection screen - Step in onboarding
 /// 
-/// Displays tappable frequency cards allowing users to select how often
-/// they want to track their habit (Daily, Multiple times per day, Weekly, etc.).
-class OnboardingFrequencyScreen extends StatefulWidget {
-  final ValueChanged<String> onFrequencySelected;
+/// Displays tappable goal type cards allowing users to select whether they want
+/// to track their habit as binary (done/not done) or quantitative (with numbers).
+class OnboardingGoalTypeScreen extends StatefulWidget {
+  final ValueChanged<GoalType> onGoalTypeSelected;
 
-  const OnboardingFrequencyScreen({
+  const OnboardingGoalTypeScreen({
     super.key,
-    required this.onFrequencySelected,
+    required this.onGoalTypeSelected,
   });
 
   @override
-  State<OnboardingFrequencyScreen> createState() =>
-      _OnboardingFrequencyScreenState();
+  State<OnboardingGoalTypeScreen> createState() =>
+      _OnboardingGoalTypeScreenState();
 }
 
-class _OnboardingFrequencyScreenState extends State<OnboardingFrequencyScreen>
+class _OnboardingGoalTypeScreenState extends State<OnboardingGoalTypeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  String? _selectedFrequency;
+  GoalType? _selectedGoalType;
 
   @override
   void initState() {
@@ -45,11 +45,11 @@ class _OnboardingFrequencyScreenState extends State<OnboardingFrequencyScreen>
     super.dispose();
   }
 
-  void _onFrequencySelected(String frequency) {
+  void _onGoalTypeSelected(GoalType goalType) {
     setState(() {
-      _selectedFrequency = frequency;
+      _selectedGoalType = goalType;
     });
-    widget.onFrequencySelected(frequency);
+    widget.onGoalTypeSelected(goalType);
   }
 
   @override
@@ -68,7 +68,7 @@ class _OnboardingFrequencyScreenState extends State<OnboardingFrequencyScreen>
             children: [
               // Title
               Text(
-                'How often?',
+                'How do you want to track it?',
                 style: theme.textTheme.displayLarge?.copyWith(
                   color: ChainyColors.getPrimaryText(brightness),
                   fontWeight: FontWeight.w300,
@@ -78,48 +78,30 @@ class _OnboardingFrequencyScreenState extends State<OnboardingFrequencyScreen>
 
               // Description
               Text(
-                'Select how frequently you want to track this habit.',
+                'Choose whether you want to track completion or measure progress with numbers.',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: ChainyColors.getSecondaryText(brightness),
                 ),
               ),
               const SizedBox(height: 48),
 
-              // Frequency selection cards
-              _FrequencyOptionCard(
-                frequency: RecurrenceType.daily.name,
-                title: 'Daily',
-                subtitle: 'Every day',
-                icon: Icons.calendar_today,
-                isSelected: _selectedFrequency == RecurrenceType.daily.name,
-                onTap: () => _onFrequencySelected(RecurrenceType.daily.name),
+              // Goal type selection cards
+              _GoalTypeOptionCard(
+                goalType: GoalType.binary,
+                title: 'Binary',
+                subtitle: 'Done or not done',
+                icon: Icons.check_circle_outline,
+                isSelected: _selectedGoalType == GoalType.binary,
+                onTap: () => _onGoalTypeSelected(GoalType.binary),
               ),
               const SizedBox(height: 12),
-              _FrequencyOptionCard(
-                frequency: RecurrenceType.multiplePerDay.name,
-                title: 'Multiple times per day',
-                subtitle: 'Several times daily',
-                icon: Icons.repeat,
-                isSelected: _selectedFrequency == RecurrenceType.multiplePerDay.name,
-                onTap: () => _onFrequencySelected(RecurrenceType.multiplePerDay.name),
-              ),
-              const SizedBox(height: 12),
-              _FrequencyOptionCard(
-                frequency: RecurrenceType.weekly.name,
-                title: 'Weekly',
-                subtitle: '3× per week',
-                icon: Icons.calendar_view_week,
-                isSelected: _selectedFrequency == RecurrenceType.weekly.name,
-                onTap: () => _onFrequencySelected(RecurrenceType.weekly.name),
-              ),
-              const SizedBox(height: 12),
-              _FrequencyOptionCard(
-                frequency: RecurrenceType.custom.name,
-                title: 'Custom',
-                subtitle: 'Advanced pattern',
-                icon: Icons.settings,
-                isSelected: _selectedFrequency == RecurrenceType.custom.name,
-                onTap: () => _onFrequencySelected(RecurrenceType.custom.name),
+              _GoalTypeOptionCard(
+                goalType: GoalType.quantitative,
+                title: 'Quantitative',
+                subtitle: 'Track numbers and progress',
+                icon: Icons.trending_up,
+                isSelected: _selectedGoalType == GoalType.quantitative,
+                onTap: () => _onGoalTypeSelected(GoalType.quantitative),
               ),
             ],
           ),
@@ -129,17 +111,17 @@ class _OnboardingFrequencyScreenState extends State<OnboardingFrequencyScreen>
   }
 }
 
-/// Individual frequency option card widget
-class _FrequencyOptionCard extends StatelessWidget {
-  final String frequency;
+/// Individual goal type option card widget
+class _GoalTypeOptionCard extends StatelessWidget {
+  final GoalType goalType;
   final String title;
   final String subtitle;
   final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _FrequencyOptionCard({
-    required this.frequency,
+  const _GoalTypeOptionCard({
+    required this.goalType,
     required this.title,
     required this.subtitle,
     required this.icon,

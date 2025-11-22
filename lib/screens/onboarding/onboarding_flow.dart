@@ -13,6 +13,7 @@ import 'widgets/onboarding_progress_indicator.dart';
 import 'screens/onboarding_welcome_screen.dart';
 import 'screens/onboarding_habit_name_screen.dart';
 import 'screens/onboarding_icon_color_screen.dart';
+import 'screens/onboarding_goal_type_screen.dart';
 import 'screens/onboarding_frequency_screen.dart';
 import 'screens/onboarding_notification_screen.dart';
 
@@ -28,13 +29,13 @@ class OnboardingFlow extends ConsumerStatefulWidget {
 class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
-  static const int _totalSteps = 5;
+  static const int _totalSteps = 6;
 
   // User input data collected during onboarding
   String _userName = '';
   String _habitName = '';
   String _selectedIcon = '';
-  Color _selectedColor = ChainyColors.darkAccentBlue;
+  GoalType? _selectedGoalType;
   String _selectedFrequency = '';
   bool _notificationsEnabled = false;
 
@@ -42,7 +43,6 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
   String get userName => _userName;
   String get habitName => _habitName;
   String get selectedIcon => _selectedIcon;
-  Color get selectedColor => _selectedColor;
   String get selectedFrequency => _selectedFrequency;
   bool get notificationsEnabled => _notificationsEnabled;
 
@@ -62,12 +62,27 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       body: SafeArea(
         child: Column(
           children: [
-            // Progress indicator
+            // Progress indicator with Skip button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: OnboardingProgressIndicator(
-                currentStep: _currentStep,
-                totalSteps: _totalSteps,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OnboardingProgressIndicator(
+                      currentStep: _currentStep,
+                      totalSteps: _totalSteps,
+                    ),
+                  ),
+                  // Skip button - skips entire onboarding
+                  TextButton(
+                    onPressed: _handleSkip,
+                    style: TextButton.styleFrom(
+                      foregroundColor: ChainyColors.getSecondaryText(brightness),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    child: const Text('Skip'),
+                  ),
+                ],
               ),
             ),
 
@@ -90,6 +105,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                     },
                   ),
                   OnboardingHabitNameScreen(
+                    userName: _userName.trim().isNotEmpty ? _userName : null,
                     onHabitNameEntered: (name) {
                       setState(() {
                         _habitName = name;
@@ -97,10 +113,16 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
                     },
                   ),
                   OnboardingIconColorScreen(
-                    onSelectionComplete: (icon, color) {
+                    onSelectionComplete: (icon) {
                       setState(() {
                         _selectedIcon = icon;
-                        _selectedColor = color;
+                      });
+                    },
+                  ),
+                  OnboardingGoalTypeScreen(
+                    onGoalTypeSelected: (goalType) {
+                      setState(() {
+                        _selectedGoalType = goalType;
                       });
                     },
                   ),
@@ -122,13 +144,30 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
               ),
             ),
 
-            // Bottom navigation button
+            // Bottom navigation buttons
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: ChainyButton(
-                text: _currentStep < _totalSteps - 1 ? 'Next' : 'Get Started',
-                onPressed: _canProceed() ? _handleNavigation : null,
-                isFullWidth: true,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Back button (only show if not on first step)
+                  if (_currentStep > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ChainyButton(
+                        text: 'Back',
+                        onPressed: _handleBackNavigation,
+                        variant: ChainyButtonVariant.text,
+                        isFullWidth: true,
+                      ),
+                    ),
+                  // Next/Get Started button
+                  ChainyButton(
+                    text: _currentStep < _totalSteps - 1 ? 'Next' : 'Get Started',
+                    onPressed: _canProceed() ? _handleNavigation : null,
+                    isFullWidth: true,
+                  ),
+                ],
               ),
             ),
           ],
@@ -147,8 +186,10 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       case 2:
         return _selectedIcon.isNotEmpty;
       case 3:
-        return _selectedFrequency.isNotEmpty;
+        return _selectedGoalType != null;
       case 4:
+        return _selectedFrequency.isNotEmpty;
+      case 5:
         return true; // Notification permission is optional
       default:
         return false;
@@ -168,11 +209,107 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
     }
   }
 
+  /// Handles back navigation to previous screen
+  void _handleBackNavigation() {
+    if (_currentStep > 0) {
+      _pageController.animateToPage(
+        _currentStep - 1,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  /// Handles skip action - skips onboarding without creating a habit
+  void _handleSkip() {
+    _skipOnboarding();
+  }
+
+  /// Skips onboarding without creating a habit - only marks onboarding as completed
+  Future<void> _skipOnboarding() async {
+    AppLogger.functionEntry('_skipOnboarding', tag: 'OnboardingFlow');
+    
+    try {
+      // Save user name if provided
+      if (_userName.trim().isNotEmpty) {
+        final preferencesRepo = ref.read(preferencesRepositoryProvider.notifier);
+        await preferencesRepo.saveUserName(_userName);
+        AppLogger.info('User name saved', data: {'userName': _userName}, tag: 'OnboardingFlow');
+      }
+      
+      // Mark onboarding as completed
+      final preferencesRepo = ref.read(preferencesRepositoryProvider.notifier);
+      await preferencesRepo.setOnboardingCompleted(true);
+      AppLogger.info('Onboarding skipped and marked as completed', tag: 'OnboardingFlow');
+      
+      // Navigate to main app
+      if (mounted) {
+        AppLogger.debug('Navigating to home screen', tag: 'OnboardingFlow');
+        context.go(AppRouter.home);
+        AppLogger.info('Navigation to home screen completed', tag: 'OnboardingFlow');
+      }
+      
+      AppLogger.functionExit('_skipOnboarding', tag: 'OnboardingFlow');
+    } catch (error, stack) {
+      AppLogger.error(
+        'Failed to skip onboarding',
+        error: error,
+        stackTrace: stack,
+        tag: 'OnboardingFlow',
+      );
+      
+      // Show error to user with iOS dark mode styling
+      if (mounted) {
+        final theme = Theme.of(context);
+        final brightness = theme.brightness;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to skip onboarding: ${error.toString()}',
+              style: TextStyle(
+                color: ChainyColors.getPrimaryText(brightness),
+              ),
+            ),
+            backgroundColor: ChainyColors.getCard(brightness),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: ChainyColors.error,
+                width: 1,
+              ),
+            ),
+            // Subtle shadow for depth in dark mode
+            elevation: brightness == Brightness.dark ? 8 : 4,
+          ),
+        );
+      }
+      rethrow;
+    }
+  }
+
   /// Completes onboarding and creates the first habit
   Future<void> _completeOnboarding() async {
     AppLogger.functionEntry('_completeOnboarding', tag: 'OnboardingFlow');
     
     try {
+      // Ensure all required values are set with defaults if missing
+      if (_userName.trim().isEmpty) {
+        _userName = 'User';
+      }
+      if (_habitName.trim().isEmpty) {
+        _habitName = 'My Habit';
+      }
+      if (_selectedIcon.isEmpty) {
+        _selectedIcon = '💪';
+      }
+      if (_selectedGoalType == null) {
+        _selectedGoalType = GoalType.binary;
+      }
+      if (_selectedFrequency.isEmpty) {
+        _selectedFrequency = RecurrenceType.daily.name;
+      }
+      
       // Parse frequency string to RecurrenceType enum
       final recurrenceType = _parseFrequency(_selectedFrequency);
       AppLogger.debug('Parsed frequency', 
@@ -190,7 +327,8 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         data: {
           'habitName': _habitName,
           'icon': _selectedIcon,
-          'color': _selectedColor.toString(),
+          'color': ChainyColors.darkAccentBlue.toString(),
+          'goalType': (_selectedGoalType ?? GoalType.binary).name,
           'recurrenceType': recurrenceType.name,
         }, 
         tag: 'OnboardingFlow');
@@ -199,8 +337,8 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
       await habitController.createHabit(
         name: _habitName,
         icon: _selectedIcon,
-        color: _selectedColor,
-        goalType: GoalType.binary, // Default to binary for onboarding
+        color: ChainyColors.darkAccentBlue, // Default color
+        goalType: _selectedGoalType ?? GoalType.binary, // Use selected goal type or default to binary
         recurrenceType: recurrenceType,
         recurrenceConfig: recurrenceConfig,
       );
@@ -232,16 +370,29 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         tag: 'OnboardingFlow',
       );
       
-      // Show error to user
+      // Show error to user with iOS dark mode styling
       if (mounted) {
+        final theme = Theme.of(context);
+        final brightness = theme.brightness;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to complete onboarding: ${error.toString()}'),
-            backgroundColor: ChainyColors.error,
+            content: Text(
+              'Failed to complete onboarding: ${error.toString()}',
+              style: TextStyle(
+                color: ChainyColors.getPrimaryText(brightness),
+              ),
+            ),
+            backgroundColor: ChainyColors.getCard(brightness),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
+              side: BorderSide(
+                color: ChainyColors.error,
+                width: 1,
+              ),
             ),
+            // Subtle shadow for depth in dark mode
+            elevation: brightness == Brightness.dark ? 8 : 4,
           ),
         );
       }

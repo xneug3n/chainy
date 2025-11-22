@@ -58,7 +58,6 @@ class _OnboardingWelcomeScreenState extends State<OnboardingWelcomeScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brightness = theme.brightness;
-    final hasName = _nameController.text.trim().isNotEmpty;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -66,7 +65,7 @@ class _OnboardingWelcomeScreenState extends State<OnboardingWelcomeScreen>
         opacity: _fadeAnimation,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Welcome message
             Text(
@@ -75,66 +74,53 @@ class _OnboardingWelcomeScreenState extends State<OnboardingWelcomeScreen>
                 color: ChainyColors.getPrimaryText(brightness),
                 fontWeight: FontWeight.w300,
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
 
-            // Name input or headline display
-            if (hasName)
-              // Show name as headline after entry
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-                style: theme.textTheme.displayMedium?.copyWith(
-                  color: ChainyColors.getPrimaryText(brightness),
-                  fontWeight: FontWeight.w400,
-                ) ?? const TextStyle(),
-                child: Text(
-                  'Hi, ${_nameController.text.trim()}!',
-                ),
-              )
-            else
-              // Show friendly message and input field
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Let\'s get started by setting up your first habit.',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: ChainyColors.getSecondaryText(brightness),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Large name input field
-                  TextField(
-                    controller: _nameController,
-                    focusNode: _focusNode,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.words,
-                    textInputAction: TextInputAction.done,
-                    style: TextStyle(
-                      color: ChainyColors.getPrimaryText(brightness),
-                      fontSize: 28,
-                      fontWeight: FontWeight.w400,
-                      height: 1.2,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Your name',
-                      hintStyle: TextStyle(
-                        color: ChainyColors.getSecondaryText(brightness),
-                        fontSize: 28,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    onSubmitted: (_) {
-                      _focusNode.unfocus();
-                    },
-                  ),
-                ],
+            // Friendly message
+            Text(
+              'Let\'s get started by setting up your first habit.',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: ChainyColors.getSecondaryText(brightness),
               ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            
+            // Large name input field - transparent background, visible text
+            TextField(
+              controller: _nameController,
+              focusNode: _focusNode,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.done,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: ChainyColors.getPrimaryText(brightness), // White - primary text color
+                fontSize: 28,
+                fontWeight: FontWeight.w400,
+                height: 1.2,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Your name',
+                hintStyle: TextStyle(
+                  color: ChainyColors.getSecondaryText(brightness),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w400,
+                ),
+                filled: true,
+                fillColor: ChainyColors.getBackground(brightness), // Same as background - invisible field
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+              cursorColor: ChainyColors.getAccentBlue(brightness),
+              onSubmitted: (_) {
+                _focusNode.unfocus();
+              },
+            ),
           ],
         ),
       ),
