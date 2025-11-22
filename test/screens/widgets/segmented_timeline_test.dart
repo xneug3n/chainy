@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import '../../../lib/screens/widgets/segmented_timeline.dart';
-import '../../../lib/features/habits/domain/models/habit.dart';
-import '../../../lib/features/habits/domain/models/recurrence_config.dart';
+import 'package:chainy/screens/widgets/segmented_timeline.dart';
+import 'package:chainy/features/habits/domain/models/habit.dart';
+import 'package:chainy/features/habits/domain/models/recurrence_config.dart';
 
 void main() {
   group('SegmentedTimeline', () {

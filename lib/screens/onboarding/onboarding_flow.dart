@@ -237,7 +237,11 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to complete onboarding: ${error.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: ChainyColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         );
       }

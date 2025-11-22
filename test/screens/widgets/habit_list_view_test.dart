@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../lib/screens/widgets/habit_list_view.dart';
+import 'package:chainy/screens/widgets/habit_list_view.dart';
 
 void main() {
   group('HabitListView', () {

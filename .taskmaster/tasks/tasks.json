@@ -472,13 +472,13 @@
               6
             ],
             "details": "Implement fade/slide transitions between screens, subtle scale animation on button press, smooth progress indicator updates, gentle fade-in for input fields, subtle bounce effect for selections, and soft highlight animations for selected items.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test animation timing, smoothness, and consistency across different devices."
           },
           {
             "id": 9,
-            "title": "Optimize for iOS dark mode",
-            "description": "Ensure all UI elements follow iOS dark mode guidelines and appearance",
+            "title": "Implement Light Mode for onboarding screens",
+            "description": "Create and apply light mode color palette to all onboarding screens, ensuring proper contrast and iOS design patterns",
             "dependencies": [
               1,
               2,
@@ -487,9 +487,9 @@
               5,
               6
             ],
-            "details": "Apply proper dark mode styling to all onboarding screens, ensuring they match iOS design patterns. Use appropriate dark mode colors, contrasts, and visual hierarchy. Test on different iOS devices to ensure consistent appearance.",
+            "details": "1. Define light mode color palette (white/light backgrounds, dark text)\n2. Update ChainyColors.light* constants with appropriate light mode colors\n3. Verify all onboarding screens adapt correctly to light mode\n4. Test contrast ratios and accessibility in light mode\n5. Ensure visual hierarchy and readability in light mode\n6. Test on different iOS devices and screen sizes",
             "status": "pending",
-            "testStrategy": "Test dark mode appearance on various iOS devices and screen sizes."
+            "testStrategy": "1. Test light mode appearance on various iOS devices and screen sizes\n2. Verify color contrast ratios meet accessibility standards (WCAG 4.5:1 for normal text)\n3. Test theme switching between light and dark mode\n4. Ensure all text is readable in light mode\n5. Verify visual hierarchy is maintained in light mode"
           }
         ]
       },
@@ -541,11 +541,72 @@
             "testStrategy": "Create widget tests for each animated component. Test animations in different states and conditions. Perform integration tests to verify animations and haptic feedback are triggered at the right times. Test performance impact of animations. Verify animations work correctly on different devices and screen sizes."
           }
         ]
+      },
+      {
+        "id": 11,
+        "title": "Implement Settings screen and preferences management",
+        "description": "Create an iOS-style Settings screen that matches the provided layout, including theme appearance controls, notification toggles, and legal/version information, backed by persistent preferences.",
+        "details": "Design and implement a full Settings experience that reflects the sketch: Unlock Premium banner at the top, appearance section with theme controls, notification section with multiple toggles, and a footer with legal links and app version. The Settings feature must be fully integrated with the app's theming, notification, and local storage infrastructure.\n\n1. Define a Settings domain model that captures all configurable options:\n   - Theme mode (system / light / dark)\n   - Dark mode toggle (for explicit dark override when not using system)\n   - Notifications enabled (master switch)\n   - Vibration enabled\n   - App icon badge enabled\n   - Notification sound (e.g. default, subtle, none)\n\n2. Persist settings using the existing local storage stack (Hive) with a dedicated box/key. Ensure migration-safe defaults so that new fields do not break existing installs.\n\n3. Implement a Riverpod-powered Settings controller that exposes the current settings as an AsyncValue, provides mutation methods (e.g. toggleDarkMode, updateThemeMode, setNotificationSound), and synchronizes changes to storage.\n\n4. Build an iOS-style SettingsScreen in dark mode that follows the sketch:\n   - Top section: Unlock Premium banner with icon and tap handler stub\n   - \"Appearance\" section header\n   - Row for Theme with trailing segmented/chevron control showing current mode (e.g. \"System\")\n   - Row for Dark mode with trailing switch bound to settings\n   - Divider\n   - \"Notifications\" section header\n   - Switch rows for Notification, Vibration, App Icon Badge\n   - Row for Notification Sound with trailing value label (e.g. \"default\") and chevron\n   - Footer rows for Privacy Policy, Terms of Use, Version (e.g. 1.0.0)\n\n5. Connect Settings to app-wide behavior:\n   - Theme changes should flow through the existing theme provider so that toggling dark mode or theme mode updates the whole app.\n   - Notification toggles must integrate with ReminderService / flutter_local_notifications where appropriate (e.g. disabling master notifications should cancel/suspend scheduled reminders).\n   - App icon badge preference should control whether badge counts are updated.\n   - Notification sound selection should map to concrete notification channel / sound configuration on supported platforms.\n\n6. Add analytics/logging hooks (via centralized logger) around key Settings changes to help diagnose user issues in production (e.g. when users disable notifications or dark mode).\n\n7. Ensure the Settings screen is accessible (VoiceOver labels, large tap targets) and respects system settings like reduced motion.\n\nExample structure (conceptual only, actual implementation must use Riverpod and existing theming utilities):\n```dart\nclass SettingsScreen extends ConsumerWidget {\n  const SettingsScreen({super.key});\n\n  @override\n  Widget build(BuildContext context, WidgetRef ref) {\n    final settingsAsync = ref.watch(settingsControllerProvider);\n\n    return Scaffold(\n      appBar: AppBar(title: const Text('Settings')),\n      body: settingsAsync.when(\n        loading: () => const Center(child: CircularProgressIndicator()),\n        error: (error, stack) => ErrorStateWidget(error: error, stackTrace: stack),\n        data: (settings) => ListView(\n          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),\n          children: [\n            const UnlockPremiumBanner(),\n            const SizedBox(height: 24),\n            const SettingsSectionHeader(label: 'Appearance'),\n            ThemeModeRow(settings: settings),\n            DarkModeToggleRow(settings: settings),\n            const SizedBox(height: 24),\n            const SettingsSectionHeader(label: 'Notifications'),\n            NotificationToggleRow(settings: settings),\n            VibrationToggleRow(settings: settings),\n            AppIconBadgeToggleRow(settings: settings),\n            NotificationSoundRow(settings: settings),\n            const SizedBox(height: 32),\n            const LegalAndVersionSection(),\n          ],\n        ),\n      ),\n    );\n  }\n}\n```",
+        "testStrategy": "1. Unit tests for Settings model serialization/deserialization and default values\n2. Unit tests for Settings repository to verify persistence, migration defaults, and error handling\n3. Unit tests / widget tests for Settings controller to ensure toggles and updates correctly modify state and persist changes\n4. Widget tests for SettingsScreen layout to confirm all rows from the sketch are present, properly labeled, and respond to taps/toggles\n5. Integration tests verifying that theme changes from Settings propagate through the app (light/dark/system)\n6. Integration tests that toggling notification-related settings affects ReminderService / local notifications as expected (e.g. disabling notifications cancels scheduled ones)\n7. Tests for legal links opening the correct destinations and version row reflecting the runtime app version\n8. Accessibility tests for focus order, semantics, and large text support on the Settings screen",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2,
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Settings model, Hive storage, and repository",
+            "description": "Create a Settings domain model and corresponding Hive DTO to persist user preferences for theme, notifications, vibration, app icon badge, and notification sound.",
+            "dependencies": [],
+            "details": "1. Design a Settings domain entity (freezed) with fields for themeMode, isDarkModeEnabled, notificationsEnabled, vibrationEnabled, appIconBadgeEnabled, and notificationSoundKey.\n2. Create a Hive-backed SettingsDto with a TypeAdapter, ensuring migration-safe defaults for any new fields.\n3. Implement a SettingsRepository that hides storage details and exposes methods such as loadSettings(), saveSettings(), and watchSettings().\n4. Ensure repository methods handle initialization (opening boxes) safely and use the same Hive test patterns as other data layers (see Habit repository tests).",
+            "status": "pending",
+            "testStrategy": "1. Unit tests for Settings and SettingsDto serialization\n2. Tests for SettingsRepository load/save behavior, including default initialization when no data exists\n3. Tests to verify new fields get sensible defaults when upgrading from older stored data"
+          },
+          {
+            "id": 2,
+            "title": "Implement Settings controller with Riverpod",
+            "description": "Create a Riverpod AsyncNotifier/Notifier that manages Settings state and exposes mutation methods for each preference.",
+            "dependencies": [
+              1
+            ],
+            "details": "1. Implement a SettingsController (e.g. @riverpod class SettingsController extends _$SettingsController) that reads from SettingsRepository in build() and exposes methods such as toggleDarkMode(), setThemeMode(), toggleNotifications(), toggleVibration(), toggleAppIconBadge(), and setNotificationSound().\n2. Ensure state updates are optimistic but resilient: write to Hive and update in-memory state, handling failures gracefully with error logging.\n3. Provide convenient selectors/providers for frequently-used slices (e.g. currentThemeModeProvider) to avoid unnecessary rebuilds.\n4. Integrate with the existing theme provider so that Settings changes drive app-wide theme updates.",
+            "status": "pending",
+            "testStrategy": "1. Unit tests for each controller method to verify correct state transitions\n2. Tests that controller interacts with SettingsRepository as expected (load on build, persist on change)\n3. Tests for error handling and logging paths when persistence fails"
+          },
+          {
+            "id": 3,
+            "title": "Build SettingsScreen UI based on the sketch",
+            "description": "Implement the SettingsScreen layout with Unlock Premium banner, appearance section, notification section, and legal/version footer using the app's design system.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "1. Create a new SettingsScreen that matches the sketch structure: Unlock Premium banner at top, Appearance section (Theme row + Dark mode switch), Notifications section (Notification, Vibration, App Icon Badge switches + Notification Sound row), and a footer with Privacy Policy, Terms of Use, and Version rows.\n2. Use existing core UI components (buttons, section headers, switches, typography) where possible to maintain consistency.\n3. Ensure all toggles are wired to SettingsController via Riverpod and update immediately when changed.\n4. Implement navigation hooks for Unlock Premium (stubbed), Privacy Policy, and Terms of Use (open appropriate routes or external URLs).\n5. Keep the design optimized for dark mode and respect safe areas and thumb reach (primary actions above the bottom safe area).",
+            "status": "pending",
+            "testStrategy": "1. Golden/widget tests to verify SettingsScreen layout in dark mode and different device sizes\n2. Interaction tests confirming that toggles update controller state\n3. Tests that tapping legal rows triggers the correct navigation / URL launches"
+          },
+          {
+            "id": 4,
+            "title": "Integrate Settings with notifications, badges, and version information",
+            "description": "Wire Settings preferences into ReminderService/local notifications, app icon badge updates, and dynamic version display.",
+            "dependencies": [
+              1,
+              2,
+              8
+            ],
+            "details": "1. Update ReminderService (or related notification infrastructure) to respect the master notificationsEnabled flag and notificationSoundKey when scheduling or presenting notifications.\n2. Implement app icon badge control based on appIconBadgeEnabled, ensuring platform-specific behavior is handled safely.\n3. Use package_info_plus (or existing config utilities) to display the current version number in the Settings footer.\n4. Add logging around changes to notification-related settings for easier debugging.\n5. Verify that toggling settings from the screen has immediate effect where possible (e.g. canceling scheduled notifications when notifications are turned off).",
+            "status": "pending",
+            "testStrategy": "1. Integration tests that verify notifications are not scheduled or shown when master notifications are disabled\n2. Tests confirming that different notificationSoundKey values map to expected notification channel / sound behavior (where feasible)\n3. Tests that the version row reflects the runtime app version\n4. Manual/automated tests for badge behavior on supported platforms"
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-10-25T21:56:43.523Z",
-      "updated": "2025-11-03T21:14:42.593Z",
+      "updated": "2025-11-03T21:48:29.343Z",
       "description": "Tasks for master context"
     }
   }

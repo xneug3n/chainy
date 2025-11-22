@@ -31,26 +31,26 @@ class _OnboardingIconColorScreenState extends State<OnboardingIconColorScreen>
     '💫', '🌟', '✨', '🎊', '🎉', '🎈', '🎁', '🎂',
   ];
 
-  // Predefined color palette
+  // Predefined color palette - optimized for dark mode visibility
   static final List<Color> _colors = [
-    ChainyColors.lightAccentBlue,
+    ChainyColors.darkAccentBlue,
     ChainyColors.success,
     ChainyColors.warning,
     ChainyColors.error,
-    ChainyColors.lightOrange,
-    Colors.purple,
-    Colors.pink,
-    Colors.red,
-    Colors.yellow,
-    Colors.teal,
-    Colors.indigo,
-    Colors.brown,
-    Colors.grey,
-    Colors.deepPurple,
+    ChainyColors.darkOrange,
+    const Color(0xFF9D8DF1), // Purple - adjusted for dark mode
+    const Color(0xFFFF6B9D), // Pink - adjusted for dark mode
+    const Color(0xFFFF4757), // Red - adjusted for dark mode
+    const Color(0xFFFFD93D), // Yellow - adjusted for dark mode
+    const Color(0xFF26D0CE), // Teal - adjusted for dark mode
+    const Color(0xFF6C5CE7), // Indigo - adjusted for dark mode
+    const Color(0xFFA67C52), // Brown - adjusted for dark mode
+    const Color(0xFF8E8E93), // Grey - matches iOS secondary text
+    const Color(0xFF7B68EE), // Deep purple - adjusted for dark mode
   ];
 
   String _selectedIcon = '';
-  Color _selectedColor = ChainyColors.lightAccentBlue;
+  Color _selectedColor = ChainyColors.darkAccentBlue;
 
   @override
   void initState() {
@@ -68,7 +68,13 @@ class _OnboardingIconColorScreenState extends State<OnboardingIconColorScreen>
     // Initialize with first icon and first color
     _selectedIcon = _icons.first;
     _selectedColor = _colors.first;
-    widget.onSelectionComplete(_selectedIcon, _selectedColor);
+    
+    // Defer callback until after first frame to avoid triggering parent setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.onSelectionComplete(_selectedIcon, _selectedColor);
+      }
+    });
   }
 
   @override
@@ -141,42 +147,43 @@ class _OnboardingIconColorScreenState extends State<OnboardingIconColorScreen>
               const SizedBox(height: 16),
 
               // Icon grid
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 8,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1,
-                ),
-                itemCount: _icons.length,
-                itemBuilder: (context, index) {
-                  final icon = _icons[index];
-                  final isSelected = icon == _selectedIcon;
-
-                  return GestureDetector(
-                    onTap: () => _onIconSelected(icon),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? ChainyColors.lightAccentBlue.withValues(alpha: 0.2)
-                            : ChainyColors.getCard(brightness),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? ChainyColors.lightAccentBlue
-                              : ChainyColors.getBorder(brightness),
-                          width: isSelected ? 2 : 1,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableWidth = constraints.maxWidth;
+                  final itemSize = (availableWidth - (12 * 7)) / 8;
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: _icons.map((icon) {
+                      final isSelected = icon == _selectedIcon;
+                      return SizedBox(
+                        width: itemSize,
+                        height: itemSize,
+                        child: GestureDetector(
+                          onTap: () => _onIconSelected(icon),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? ChainyColors.getAccentBlue(brightness).withValues(alpha: 0.2)
+                                  : ChainyColors.getCard(brightness),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? ChainyColors.getAccentBlue(brightness)
+                                    : ChainyColors.getBorder(brightness),
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                icon,
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          icon,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                      ),
-                    ),
+                      );
+                    }).toList(),
                   );
                 },
               ),
@@ -224,52 +231,53 @@ class _OnboardingIconColorScreenState extends State<OnboardingIconColorScreen>
               const SizedBox(height: 24),
 
               // Color grid
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 6,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1,
-                ),
-                itemCount: _colors.length,
-                itemBuilder: (context, index) {
-                  final color = _colors[index];
-                  final isSelected = color == _selectedColor;
-
-                  return GestureDetector(
-                    onTap: () => _onColorSelected(color),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? ChainyColors.getPrimaryText(brightness)
-                              : ChainyColors.getBorder(brightness),
-                          width: isSelected ? 3 : 1,
-                        ),
-                        boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.4),
-                                  blurRadius: 8,
-                                  spreadRadius: 2,
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: isSelected
-                          ? Center(
-                              child: Icon(
-                                Icons.check,
-                                color: _getContrastColor(color),
-                                size: 20,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final availableWidth = constraints.maxWidth;
+                  final itemSize = (availableWidth - (12 * 5)) / 6;
+                  return Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: _colors.map((color) {
+                      final isSelected = color == _selectedColor;
+                      return SizedBox(
+                        width: itemSize,
+                        height: itemSize,
+                        child: GestureDetector(
+                          onTap: () => _onColorSelected(color),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? ChainyColors.getPrimaryText(brightness)
+                                    : ChainyColors.getBorder(brightness),
+                                width: isSelected ? 3 : 1,
                               ),
-                            )
-                          : null,
-                    ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: color.withValues(alpha: 0.4),
+                                        blurRadius: 8,
+                                        spreadRadius: 2,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: isSelected
+                                ? Center(
+                                    child: Icon(
+                                      Icons.check,
+                                      color: _getContrastColor(color),
+                                      size: 20,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   );
                 },
               ),

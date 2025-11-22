@@ -104,7 +104,7 @@ class _FilterDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<HabitFilterType?>(
-      value: value,
+      initialValue: value,
       onChanged: (type) => onChanged(type ?? HabitFilterType.all),
       decoration: const InputDecoration(
         labelText: 'Filter',
@@ -162,7 +162,7 @@ class _SortDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<HabitSortType?>(
-      value: value,
+      initialValue: value,
       onChanged: (type) => onChanged(type ?? HabitSortType.dueDate),
       decoration: const InputDecoration(
         labelText: 'Sort',
@@ -259,7 +259,7 @@ class AdvancedFilterPanel extends ConsumerWidget {
             
             // Recurrence filter
             DropdownButtonFormField<RecurrenceType?>(
-              value: filter.recurrenceFilter,
+              initialValue: filter.recurrenceFilter,
               onChanged: (value) => ref
                   .read(habitFilterControllerProvider.notifier)
                   .setRecurrenceFilter(value),
@@ -285,7 +285,7 @@ class AdvancedFilterPanel extends ConsumerWidget {
             
             // Goal type filter
             DropdownButtonFormField<GoalType?>(
-              value: filter.goalTypeFilter,
+              initialValue: filter.goalTypeFilter,
               onChanged: (value) => ref
                   .read(habitFilterControllerProvider.notifier)
                   .setGoalTypeFilter(value),
